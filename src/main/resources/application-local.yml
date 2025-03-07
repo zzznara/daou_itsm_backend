@@ -35,15 +35,15 @@ server:
       enabled: true
       max-file-size: 200MB
       max-request-size: 500MB
-      location: D:\\workspace\upload
+      location: ./upload
 
 file:
   upload:
-    base-path-upload: D:\\workspace\upload
+    base-path-upload: ./upload
 
 logging:
   file:
-    path: D:\\workspace\log
+    path: ./_log_dir
   config: classpath:logback/logback-${spring.profiles.active}.xml
   level:
     com:
