@@ -17,15 +17,24 @@ spring:
       pool-name: hikari-cp-sboot-koscotms-local
       read-only: false
       minimum-idle: 3
-      connection-init-sql: SELECT 1
       driver-class-name: com.p6spy.engine.spy.P6SpyDriver
       jdbc-url: jdbc:p6spy:mysql://192.192.158.73:3306/vue?allowPublicKeyRetrieval=true&useSSL=false
       username: vue
       password: 2025*Kiwoom
-      devtools:
-      livereload:
-      enabled: true
-
+  jpa:
+    database-platform: org.hibernate.dialect.MySQL8Dialect
+    hibernate:
+      ddl-auto: none
+    properties:
+      hibernate:
+        show_sql: false
+        format_sql: false
+        use_sql_comments: true
+        type:
+          descriptor:
+            sql:
+              BasicBinder: TRACE
+    open-in-view: false
 
 #server config
 server:
@@ -46,17 +55,31 @@ logging:
     path: ./_log_dir
   config: classpath:logback/logback-${spring.profiles.active}.xml
   level:
-    com:
-      zaxxer:
-        hikari: debug
-    root: debug
+    com.p6spy: debug
     p6spy: debug
+    kr.co.dysnt.framework.core.config.formatter: debug
+    org.hibernate.SQL: off
+    org.hibernate.type.descriptor.sql: off
     web: debug
+    kr.co.dysnt: debug
 
 decorator:
   datasource:
     p6spy:
       enable-logging: true
+      multiline: true
+      logging: slf4j
+      enable-format: true
+      slow-sql-millis: 1000
+      stack-trace-logging: false
+      deregistery-drivers: false
+      format-sql: true
+      log-file: spy.log
+      append: true
+      exclude-categories: info,debug,result,batch,commit,rollback
+      date-format: yyyy-MM-dd HH:mm:ss
+      use-native-parser: false
+      log-format: "%(currentTime) | %(executionTime)ms | %(category) | %(sql)"
 
 debug: true
 

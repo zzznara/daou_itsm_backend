@@ -251,7 +251,8 @@
                      </if>
                        AND tm.USE_YN = 'Y'        
                   ORDER BY MENU_ID, MENU_LVL, SORT_SEQ
-    ) WHERE row_num = 1
+    ) AS menu_auth_derived
+    WHERE row_num = 1
     </select>    
         
 </mapper>
