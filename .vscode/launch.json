@@ -1,0 +1,31 @@
+{
+  "configurations": [
+    {
+      "type": "java",
+      "name": "Spring Boot-KoscoTmsApplication<koscotms>",
+      "request": "launch",
+      "cwd": "${workspaceFolder}",
+      "mainClass": "kr.co.dysnt.framework.KoscoTmsApplication",
+      "projectName": "koscotms",
+      "args": "",
+      "envFile": "${workspaceFolder}/.env"
+    },
+    {
+      "type": "java",
+      "name": "Spring Boot-KoscoTmsApplication<framework>",
+      "request": "launch",
+      "cwd": "${workspaceFolder}",
+      "mainClass": "kr.co.dysnt.framework.KoscoTmsApplication",
+      "projectName": "framework",
+      "args": "",
+      "envFile": "${workspaceFolder}/.env"
+    },
+    {
+      "type": "java",
+      "request": "launch",
+      "name": "Launch Spring Boot",
+      "mainClass": "kr.co.dysnt.framework.KoscoTmsApplication",
+      "vmArgs": "-Dspring.profiles.active=local"
+    }
+  ]
+}

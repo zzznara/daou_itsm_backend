@@ -1,8 +1,6 @@
 /.metadata/
-/.vscode/
 /.idea/
 /target/
 /log_dir/
 /_log_dir/
-/.vscode/
 package-lock.json
