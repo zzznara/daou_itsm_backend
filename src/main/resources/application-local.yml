@@ -17,14 +17,15 @@ spring:
       pool-name: hikari-cp-sboot-koscotms-local
       read-only: false
       minimum-idle: 3
-      connection-init-sql: SELECT 1 FROM DUAL
+      connection-init-sql: SELECT 1
       driver-class-name: com.p6spy.engine.spy.P6SpyDriver
-      jdbc-url: jdbc:p6spy:oracle:thin:@pathcosmos.iptime.org:15329:XE
-      username: VUE
-      password: VUE
-  devtools:
-    livereload:
+      jdbc-url: jdbc:p6spy:mysql://192.192.158.73:3306/vue?allowPublicKeyRetrieval=true&useSSL=false
+      username: vue
+      password: 2025*Kiwoom
+      devtools:
+      livereload:
       enabled: true
+
 
 #server config
 server:
@@ -34,15 +35,15 @@ server:
       enabled: true
       max-file-size: 200MB
       max-request-size: 500MB
-      location: ./_upload_files_dir
+      location: D:\\workspace\upload
 
 file:
   upload:
-    base-path-upload: ./_upload_files_dir
+    base-path-upload: D:\\workspace\upload
 
 logging:
   file:
-    path: ./_log_dir
+    path: D:\\workspace\log
   config: classpath:logback/logback-${spring.profiles.active}.xml
   level:
     com:

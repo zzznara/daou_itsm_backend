@@ -99,7 +99,8 @@
             CALL searchUserMenuList(#{userId}, #{menuNmKor}, #{result, mode=OUT, jdbcType=CURSOR, javaType=java.sql.ResultSet, resultMap=menuListMap} )            
          }
     -->
-     WITH TLB1 AS (
+	<!--    
+	WITH TLB1 AS (
                    SELECT DISTINCT MENU_ID
                      FROM TB_MENU B
                START WITH MENU_ID IN (
@@ -130,6 +131,87 @@
 	CONNECT BY PRIOR MENU_ID = UPPER_MENU_ID AND MENU_NM_KOR LIKE '%' || #{menuNmKor} || '%'
 	ORDER SIBLINGS BY MENU_LVL,
 	                  SORT_SEQ
+	-->
+	<!--2025/03/06 MYSQL 쿼리로 변경-->
+	WITH RECURSIVE UserMenuIds AS (
+	    <!--기본 쿼리: 사용자가 권한을 가진 메뉴 ID-->
+	    SELECT DISTINCT tm.MENU_ID
+	    FROM TB_MENU_AUTH tma
+	    INNER JOIN TB_MENU tm ON tma.MENU_ID = tm.MENU_ID
+	    INNER JOIN TB_AUTH ta ON tma.AUTH_ID = ta.AUTH_ID
+	    INNER JOIN TB_AUTH_GROUP tag ON tma.AUTH_ID = tag.AUTH_ID
+	    INNER JOIN TB_GROUP_USER tgu ON tag.GROUP_ID = tgu.GROUP_ID
+	    WHERE tgu.USER_ID =  #{userId} AND tm.USE_YN = 'Y'
+	),
+	
+	<!-- 2. 첫 번째 계층적 쿼리를 위한 재귀 CTE (상향식: 하위->상위)-->
+	MenuWithParents AS (
+	    <!-- 기본: 사용자 권한이 있는 메뉴-->
+	    SELECT MENU_ID, UPPER_MENU_ID 
+	    FROM TB_MENU
+	    WHERE MENU_ID IN (SELECT MENU_ID FROM UserMenuIds)
+	    
+	    UNION ALL
+	    
+	    <!-- 재귀: 상위 메뉴 찾기 (CONNECT BY PRIOR UPPER_MENU_ID = MENU_ID에 해당)-->
+	    SELECT b.MENU_ID, b.UPPER_MENU_ID
+	    FROM TB_MENU b
+	    JOIN MenuWithParents mp ON b.MENU_ID = mp.UPPER_MENU_ID
+	),
+	
+	<!-- 3. 메뉴 계층 구조를 구축하는 재귀 CTE (하향식: 상위->하위)-->
+	MenuHierarchy AS (
+	    <!-- 기본: 레벨 1인 루트 메뉴부터 시작-->
+	    SELECT 
+	        a.MENU_ID,
+	        a.UPPER_MENU_ID,
+	        a.MENU_ID AS ROOT_MENU_ID,  <!-- 루트 메뉴 ID-->
+	        a.MENU_NM_KOR,
+	        a.MENU_NM_ENG,
+	        a.MENU_URL,
+	        a.MENU_LVL,
+	        a.MENU_NM_KOR AS PATH_KOR,  <!-- 경로 시작-->
+	        a.MENU_NM_ENG AS PATH_ENG,
+	        a.SORT_SEQ,
+	        1 AS LEVEL
+	    FROM TB_MENU a
+	    WHERE a.MENU_LVL = 1
+	    AND a.MENU_ID IN (SELECT MENU_ID FROM MenuWithParents)
+	    
+	    UNION ALL
+	    
+	    <!-- 재귀: 하위 메뉴 찾기 (CONNECT BY PRIOR MENU_ID = UPPER_MENU_ID에 해당)-->
+	    SELECT 
+	        a.MENU_ID,
+	        a.UPPER_MENU_ID,
+	        h.ROOT_MENU_ID,
+	        a.MENU_NM_KOR,
+	        a.MENU_NM_ENG,
+	        a.MENU_URL,
+	        a.MENU_LVL,
+	        CONCAT(h.PATH_KOR, ' > ', a.MENU_NM_KOR),
+	        CONCAT(h.PATH_ENG, ' > ', a.MENU_NM_ENG),
+	        a.SORT_SEQ,
+	        h.LEVEL + 1
+	    FROM TB_MENU a
+	    JOIN MenuHierarchy h ON a.UPPER_MENU_ID = h.MENU_ID
+	    WHERE a.MENU_ID IN (SELECT MENU_ID FROM MenuWithParents)
+	    AND ( #{menuNmKor} IS NULL OR a.MENU_NM_KOR LIKE CONCAT('%',  #{menuNmKor}, '%'))
+	)
+	
+	<!-- 최종 결과 선택-->
+	SELECT 
+	    MENU_ID,
+	    UPPER_MENU_ID,
+	    ROOT_MENU_ID,
+	    MENU_NM_KOR,
+	    MENU_NM_ENG,
+	    MENU_URL,
+	    MENU_LVL,
+	    PATH_KOR AS DEPT_NM_KOR,
+	    PATH_ENG AS DEPT_NM_ENG
+	FROM MenuHierarchy
+	ORDER BY MENU_LVL, SORT_SEQ
     </select>    
     
     <resultMap id="menuAuthMap" type="egovMap" />    

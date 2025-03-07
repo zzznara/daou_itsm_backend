@@ -36,7 +36,7 @@
 	
 	
 	<select id="searchDetailCode" parameterType="hashMap" resultMap="detailMap">
-
+	<!--
     SELECT DETL_CD,
            MAST_CD,
            CD_NM_KOR,
@@ -75,6 +75,47 @@
 	   AND NVL(ATTR10, '1')  LIKE DECODE(#{attr10}, NULL, '%', #{attr10})	   
 	   AND USE_YN  = NVL(#{useYn}, USE_YN)
 	  ORDER BY SORT_SEQ
+	-->
+	<!--2025/03/06 MYSQL 쿼리로 변경-->
+	SELECT 
+	    DETL_CD,
+	    MAST_CD,
+	    CD_NM_KOR,
+	    CD_NM_ENG,
+	    CD_DESC,
+	    SORT_SEQ,
+	    USE_YN,
+	    ATTR1,
+	    ATTR2,
+	    ATTR3,
+	    ATTR4,
+	    ATTR5,
+	    INPT_DT,
+	    INPT_ID,
+	    INPT_IP,
+	    UPDT_DT,
+	    UPDT_ID,
+	    UPDT_IP,
+	    ATTR6,
+	    ATTR7,
+	    ATTR8,
+	    ATTR9,
+	    ATTR10
+	FROM TB_CD_DETAIL
+	WHERE MAST_CD = #{mastCd} 
+	  AND DETL_CD LIKE CONCAT('%', #{detlCd}, '%')
+	  AND IFNULL(ATTR1, '1') LIKE IFNULL(#{attr1}, '%')
+	  AND IFNULL(ATTR2, '1') LIKE IFNULL(#{attr2}, '%')
+	  AND IFNULL(ATTR3, '1') LIKE IFNULL(#{attr3}, '%')
+	  AND IFNULL(ATTR4, '1') LIKE IFNULL(#{attr4}, '%')
+	  AND IFNULL(ATTR5, '1') LIKE IFNULL(#{attr5}, '%')
+	  AND IFNULL(ATTR6, '1') LIKE IFNULL(#{attr6}, '%')
+	  AND IFNULL(ATTR7, '1') LIKE IFNULL(#{attr7}, '%')
+	  AND IFNULL(ATTR8, '1') LIKE IFNULL(#{attr8}, '%')
+	  AND IFNULL(ATTR9, '1') LIKE IFNULL(#{attr9}, '%')
+	  AND IFNULL(ATTR10, '1') LIKE IFNULL(#{attr10}, '%')
+	  AND USE_YN = IFNULL(#{useYn}, USE_YN)
+	ORDER BY SORT_SEQ;
 	</select>
 	
 	

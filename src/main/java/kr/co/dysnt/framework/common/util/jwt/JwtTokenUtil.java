@@ -2,13 +2,10 @@ package kr.co.dysnt.framework.common.util.jwt;
 
 import java.io.Serializable;
 import java.security.Key;
-import java.util.Base64;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
-
-import javax.crypto.spec.SecretKeySpec;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -20,6 +17,7 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import kr.co.dysnt.framework.common.util.jwt.service.JwtUserDetailsService;
+import kr.co.dysnt.framework.core.security.utils.JwtUtil;
 
 @Component
 // @RequiredArgsConstructor
@@ -43,8 +41,10 @@ public class JwtTokenUtil implements Serializable {
     }
 
     private Key getSigningKey() {
-        byte[] keyBytes = Base64.getDecoder().decode(jwtSecretKey);
-        return new SecretKeySpec(keyBytes, SignatureAlgorithm.HS512.getJcaName());
+        //byte[] keyBytes = Base64.getDecoder().decode(JwtUtil.secretKey);
+        //return new SecretKeySpec(keyBytes, SignatureAlgorithm.HS512.getJcaName());
+        
+        return JwtUtil.secretKey;
     }
 
     /**
