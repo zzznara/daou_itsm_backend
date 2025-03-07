@@ -1,0 +1,289 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- 
+ * 공통코드 관리 iBatis SqlMap으로서 작용한다.
+ * @Company : DONGYEN S&t, Ltd.
+ * @Copyright : Copyright (C) by DONGYEN S&t All rights reserved.
+ * @Author : 류승우
+ * @Create : 2022년 04월 06일
+  -->
+<mapper namespace="company.vendor">
+	
+	<resultMap id="vendorMap" type="egovMap" />	
+	<select id="searchVendorList"  parameterType="hashMap" resultMap="vendorMap">
+	<!-- 
+	     {
+	    	CALL searchVendorList(#{systemCd}, #{schVndrNm}, #{schAddr}, #{schBsnsNo}, #{schVndrTypeCd}, #{schUseYn}, #{result, mode=OUT, jdbcType=CURSOR, javaType=java.sql.ResultSet, resultMap=vendorMap} )	    	
+		 }
+	 -->
+	  SELECT SYSTEM_CD,
+			VNDR_CD,
+			VNDR_NM,
+			ADDR,
+			ADDR_DESC,
+			LATT,
+			LONT,
+			BSNS_NO,
+			TEL_NO,
+			MNGR_NM,
+			MNGR_TEL,
+			VNDR_TYPE_CD,
+			DECODE(VNDR_TYPE_CD, NULL, ' ', (SELECT CD_NM_KOR FROM TB_CD_DETAIL tcd WHERE MAST_CD = 'VNDR_TYPE_CD' AND DETL_CD = tv.VNDR_TYPE_CD) ) VNDR_TYPE_CD_NM, 
+			PROF_NEED_YN,
+			ERP_ID,
+			USE_YN,
+			NOTE ,
+			NVL(VHCL_LIMIT_CNT, 0) VHCL_LIMIT_CNT
+	  FROM TMS_VNDR tv
+	  WHERE 
+	  		SYSTEM_CD LIKE '%' || #{systemCd} || '%'
+	  		AND VNDR_NM LIKE '%' || #{vndrNm} || '%'
+	        AND (ADDR || ' ' || ADDR_DESC) LIKE '%' || #{addrNm} || '%'
+	        AND BSNS_NO  LIKE '%' || #{bsnsNo} || '%'
+			AND	( ( #{vndrTypeCd} is null and 1 = 1 ) or (#{vndrTypeCd} is not null and VNDR_TYPE_CD = #{vndrTypeCd} ) )
+	        AND USE_YN  LIKE '%' || #{useYn} || '%'
+	        AND DEL_YN = 'N'
+	ORDER BY		
+		VNDR_NM
+	</select>	
+	
+	<!--
+	<select id="saveVendor"  parameterType="hashMap" statementType="CALLABLE">
+	     {
+	    	CALL saveVendor(
+	    		#{status},
+				#{systemCd},
+				#{vndrCd},
+				#{vndrNm},
+				#{addr},
+				#{addrDesc},
+				#{latt},
+				#{lont},
+				#{bsnsNo},
+				#{telNo},
+				#{mngrNm},
+				#{mngrTel},
+				#{vndrTypeCd},
+				#{profNeedYn},
+				#{erpId},
+				#{useYn},
+				#{note},
+				#{vhclLimitCnt},
+				#{sysUserId},
+				#{sysUserIp}
+		    )	    	
+	    
+		}
+	</select>
+	-->
+	
+	<insert id="saveVendor_I">
+	INSERT INTO TMS_VNDR (
+		SYSTEM_CD,
+		VNDR_CD,
+		VNDR_NM,
+		ADDR,
+		ADDR_DESC,
+		LATT,
+		LONT,
+		BSNS_NO,
+		TEL_NO,
+		MNGR_NM,
+		MNGR_TEL,
+		VNDR_TYPE_CD,
+		PROF_NEED_YN,
+		ERP_ID,
+		DEL_YN,
+		USE_YN,
+		NOTE,
+		VHCL_LIMIT_CNT,
+		INPT_DT,
+		INPT_ID,
+		INPT_IP,
+		UPDT_DT,
+		UPDT_ID,
+		UPDT_IP
+	)
+	VALUES (
+		#{systemCd},
+		#{vndrCd},
+		#{vndrNm},
+		#{addr},
+		#{addrDesc},
+		#{latt},
+		#{lont},
+		#{bsnsNo},
+		#{telNo},
+		#{mngrNm},
+		#{mngrTel},
+		#{vndrTypeCd},
+		#{profNeedYn},
+		#{erpId},
+		'N',
+		#{useYn},
+		#{note},
+		#{vhclLimitCnt},
+		SYSDATE,
+		#{userId},
+		#{userIp},
+		SYSDATE,
+		#{userId},
+		#{userIp}			
+	)
+	</insert>
+	
+	<update id="saveVendor_U">
+	UPDATE TMS_VNDR 
+		SET
+		SYSTEM_CD = NVL(#{systemCd}, SYSTEM_CD),
+		VNDR_CD = NVL(#{vndrCd}, VNDR_CD),
+		VNDR_NM = NVL(#{vndrNm}, VNDR_NM),
+		ADDR = NVL(#{addr}, ADDR),
+		ADDR_DESC = NVL(#{addrDesc}, ADDR_DESC),
+		LATT = NVL(#{latt}, LATT),
+		LONT = NVL(#{lont}, LONT),
+		BSNS_NO = NVL(#{bsnsNo}, BSNS_NO),
+		TEL_NO = NVL(#{telNo}, TEL_NO),
+		MNGR_NM = NVL(#{mngrNm}, MNGR_NM),
+		MNGR_TEL = NVL(#{mngrTel}, MNGR_TEL),
+		VNDR_TYPE_CD = NVL(#{vndrTypeCd}, VNDR_TYPE_CD),
+		PROF_NEED_YN = NVL(#{profNeedYn}, PROF_NEED_YN),
+		ERP_ID = NVL(#{erpId}, ERP_ID),			
+		USE_YN = NVL(#{useYn}, USE_YN),
+		NOTE = NVL(#{note}, NOTE),
+		VHCL_LIMIT_CNT = NVL(#{vhclLimitCnt}, VHCL_LIMIT_CNT),
+		UPDT_DT = SYSDATE ,
+		UPDT_ID = #{userId} ,
+		UPDT_IP = #{userIp} 
+	WHERE SYSTEM_CD = #{systemCd} AND VNDR_CD = #{vndrCd}
+	</update>
+	
+	<update id="saveVendor_D">
+	UPDATE TMS_VNDR 
+		SET 
+		DEL_YN = 'Y',					
+		UPDT_DT = SYSDATE ,
+		UPDT_ID = #{userId} ,
+		UPDT_IP = #{userIp}
+	WHERE SYSTEM_CD = #{systemCd} AND VNDR_CD = #{vndrCd}
+	</update>
+
+	<!-- 안씀
+	<select id="createVendorUser"  parameterType="hashMap" statementType="CALLABLE">
+	     {
+	    	CALL createVendorUser(	    		
+				#{systemCd},
+				#{userId},
+				#{pwd},
+				#{empNo},
+				#{nmKor},
+				#{mobileNo},				
+				#{sysUserId},
+				#{sysUserIp}
+
+		    )	    	
+	    
+		}
+	</select>
+	-->
+	
+	
+	
+	<resultMap id="companyMap" type="egovMap" />
+	<!-- 	
+	<select id="searchCompanyList"  parameterType="hashMap" statementType="CALLABLE">
+	
+	     {
+	    	CALL searchCompanyList( #{schState}, #{schPlantSystemCd}, #{schSystemCd}, #{schVndrCd}, #{schRvndrCd}, #{result, mode=OUT, jdbcType=CURSOR, javaType=java.sql.ResultSet, resultMap=companyMap} )	    	
+		 }
+	</select>
+	-->	
+	<select id="searchCompanyList_V"  parameterType="hashMap" resultMap="companyMap">
+  	SELECT  SYSTEM_CD, 
+  			VNDR_CD COMPANY_CD, 
+  			VNDR_NM COMPANY_NM , 
+  			TEL_NO COMPANY_TEL
+  	FROM TMS_VNDR  
+    WHERE USE_YN = 'Y' 
+    AND (SYSTEM_CD LIKE '%' || #{systemCd} || '%' OR SYSTEM_CD LIKE '%' || #{plantSystemCd} || '%' )  
+    AND DEL_YN = 'N'         
+    <!--(SYSTEM_CD = NVL(I_systemCd, SYSTEM_CD) OR SYSTEM_CD = 'ALL') AND USE_YN = 'Y'--> 
+    ORDER BY VNDR_NM
+	</select>
+	
+	<select id="searchCompanyList_R"  parameterType="hashMap" resultMap="companyMap">
+  	SELECT  SYSTEM_CD, 
+  			RVNDR_CD COMPANY_CD, 
+  			RVNDR_NM COMPANY_NM 
+  	FROM TMS_REAL_VNDR 
+  	WHERE VNDR_CD = #{vndrCd} 
+  	AND USE_YN = 'Y' 
+  	AND STATUS_CD = 'Y' 
+  	AND DEL_YN = 'N'
+  	<!--(SYSTEM_CD = NVL(I_systemCd, SYSTEM_CD))  AND VNDR_CD = I_vndrCd AND USE_YN = 'Y' AND STATUS_CD = 'Y'-->
+  	AND (SYSTEM_CD , VNDR_CD , RVNDR_CD) NOT IN (SELECT SYSTEM_CD , VNDR_CD , RVNDR_CD  FROM TMS_RJT_RVNDR trr 
+  	                                              WHERE DEL_YN = 'N' AND RJT_START_DT <![CDATA[<=]]> SYSDATE AND RJT_END_DT >= SYSDATE)
+    ORDER BY RVNDR_NM
+	</select>
+	
+	<select id="searchCompanyList_FR"  parameterType="hashMap" resultMap="companyMap">
+  	SELECT  SYSTEM_CD, 
+  			RVNDR_CD COMPANY_CD, 
+  			RVNDR_NM COMPANY_NM 
+  	FROM TMS_REAL_VNDR 
+  	WHERE   VNDR_CD = {#vndrCd} 
+  	AND USE_YN = 'Y' 
+  	AND STATUS_CD = 'Y' 
+  	AND DEL_YN = 'N'
+  	<!--(SYSTEM_CD = NVL(I_systemCd, SYSTEM_CD))  AND VNDR_CD = I_vndrCd AND USE_YN = 'Y' AND STATUS_CD = 'Y'-->  	
+    ORDER BY RVNDR_NM;
+	</select>
+	
+	<select id="searchCompanyList_L"  parameterType="hashMap" resultMap="companyMap">
+  	SELECT  SYSTEM_CD, 
+  			LOAD_AREA_CD COMPANY_CD, 
+  			LOAD_AREA_NM COMPANY_NM, 
+  			ADDR || ' ' || ADDR_DESC ADDR
+  	FROM TMS_LOAD_AREA 
+  	WHERE  RVNDR_CD = #{rvndrCd} 
+  	AND USE_YN = 'Y'  
+  	AND STATUS_CD = 'Y' 
+  	AND DEL_YN = 'N'
+  	<!--(SYSTEM_CD = NVL(I_systemCd, SYSTEM_CD))  AND RVNDR_CD = I_rvndrCd AND USE_YN = 'Y'  AND STATUS_CD = 'Y'-->
+  	ORDER BY LOAD_AREA_NM
+	</select>
+	
+	<resultMap id="vendorInfoMap" type="egovMap" />	
+	<select id="searchVendorInfo"  parameterType="hashMap" resultMap="vendorInfoMap">
+	<!--
+	     {
+	    	CALL searchVendorInfo(#{schVndrCd}, #{result, mode=OUT, jdbcType=CURSOR, javaType=java.sql.ResultSet, resultMap=vendorInfoMap} )	    	
+		 }
+	-->
+	  SELECT SYSTEM_CD,
+			VNDR_CD,
+			VNDR_NM,
+			ADDR,
+			ADDR_DESC,
+			LATT,
+			LONT,
+			BSNS_NO,
+			TEL_NO,
+			MNGR_NM,
+			MNGR_TEL,
+			VNDR_TYPE_CD,
+			DECODE(VNDR_TYPE_CD, NULL, ' ', (SELECT CD_NM_KOR FROM TB_CD_DETAIL tcd WHERE MAST_CD = 'VNDR_TYPE_CD' AND DETL_CD = tv.VNDR_TYPE_CD) ) VNDR_TYPE_CD_NM, 
+			PROF_NEED_YN,
+			ERP_ID,
+			USE_YN,
+			NOTE ,
+			VHCL_LIMIT_CNT
+	  FROM TMS_VNDR tv
+	  WHERE 
+	  		VNDR_CD = #{vndrCd}
+	</select>	
+	
+	
+</mapper>
+

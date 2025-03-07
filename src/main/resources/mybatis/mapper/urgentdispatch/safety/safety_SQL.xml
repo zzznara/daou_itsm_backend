@@ -1,0 +1,315 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+<!-- 
+ * 공통코드 관리 iBatis SqlMap으로서 작용한다.
+ * @Company : DONGYEN S&t, Ltd.
+ * @Copyright : Copyright (C) by DONGYEN S&t All rights reserved.
+ * @Author : 전현우
+ * @Create : 2024년 09월 19일
+  -->
+<mapper namespace="urgentdispatch.safety">
+
+    <resultMap id="dispatchListMap" type="egovMap" />
+    <select id="searchSafetyDispatchList" parameterType="hashMap" resultMap="dispatchListMap">
+    SELECT A.SG
+          ,SUBSTR(A.DT, 0, 4) || '-' || SUBSTR(A.DT, 5, 2) || '-' || SUBSTR(A.DT, 7, 2) AS DT
+          ,SUBSTR(A.DT, 0, 4) || '-' || SUBSTR(A.DT, 5, 2) || '-' || SUBSTR(A.DT, 7, 2) AS ORG_DT
+          ,A.SEQ
+          ,A.CATEGORY
+          ,(
+            SELECT CD_NM_KOR
+              FROM WSSDBO.TB_CD_DETAIL
+             WHERE MAST_CD = 'CATEGORY_GBN_CD'
+               AND DETL_CD = A.CATEGORY 
+           ) AS CATEGORY_NM
+          ,A.TURN
+          ,A.IO_GB
+          ,CASE WHEN A.IO_GB = '1' THEN '매입'
+                WHEN A.IO_GB = '2' THEN '매출'
+                ELSE ''
+            END AS IO_GB_NM
+          ,A.ST_GB
+          ,A.ETM
+          ,A.OTM
+          ,A.CAR_NO
+          ,A.CAR_CD
+          ,A.CUST_CD
+          ,A.CUST_NM
+          ,A.DRV_NM
+          ,REGEXP_REPLACE(REPLACE(A.DRV_TEL, '-', ''), '(.{3})(.+)(.{4})', '\1-\2-\3') AS DRV_TEL
+          ,A.PROD_NM
+          ,A.SAL_DT
+          ,A.SAL_JNO
+          ,A.PROD_GB
+          ,A.PROD_CD
+          ,A.PROD_CD1
+          ,A.GRADE
+          ,A.GRADE_NM
+          ,A.AREA_CD
+          ,B.AREA_NM
+          ,A.VENDOR_CD
+          ,C.VENDOR_NM
+          ,A.DECREASE_CODE
+          ,A.DECREASE_WGT
+          ,(
+            SELECT REDUCE_DESC
+              FROM WSSDBO.REDUCE_CD_DETAIL AA
+             WHERE REDUCE_CD = A.DECREASE_CODE
+               AND ROWNUM = 1
+           ) AS REDUCE_DESC
+          ,A.CAR_TYPE
+          ,D.CODE_NAME AS CAR_TYPE_NM
+          ,A.ADD_CD
+          ,A.MIX_CD
+          ,A.PT_COUNT
+          ,A.BANPUM_YN
+          ,CASE WHEN A.BANPUM_YN = 'Y' THEN 'true'
+                ELSE 'false'
+           END AS BANPUM_CHK
+          ,A.COT_NUM
+          ,A.REF_SG
+          ,A.REF_DT
+          ,A.REF_SEQ
+          ,A.BIGO
+          ,A.IN_GB AS SAVE_GB
+          ,CASE WHEN A.IN_GB = '1' THEN '사전배차'
+                WHEN A.IN_GB = '2' THEN '긴급배차'
+                ELSE '구분값 미등록'
+            END AS IN_GB_NM
+          ,STATUS_CD
+          ,(
+            SELECT CD_NM_KOR
+              FROM TB_CD_DETAIL
+             WHERE MAST_CD = 'TRANS_STATUS_CD'
+               AND DETL_CD = A.STATUS_CD
+           ) AS STATUS
+          ,A.IS_NO
+          ,A.IS_DT
+          ,A.UP_NO
+          ,A.UP_DT
+          ,H.EWGT AS IN_WEIGHT 
+          ,H.TWGT AS OUT_WEIGHT 
+          ,F.CAR_WEIGHT 
+--          ,F.REAL_WEIGHT
+          ,ABS(H.WGT) AS REAL_WEIGHT 
+          ,H.MWGT
+      FROM WSSDBO.BWAT011 A
+ LEFT JOIN (
+            SELECT B.AREA_CD,
+                   A.CODE_NAME||' '||B.AREA_NM AS AREA_NM,
+                   B.AREA_CD AS ATTR1
+              FROM (SELECT CODE,CODE_NAME
+                      FROM KOSCO.BCOD011
+                     WHERE GUBUN = '4062'
+                       AND USE_GUBUN = '1') A,
+                   (SELECT AREA_CD,
+                           AREA_NM,
+                           AREA_GB
+                      FROM KOSCO.BSAT020
+                     WHERE USE_YN = 'Y'
+                       AND AREA_CD NOT IN ('F13','I43','K25','K24','H47','H46','B14','B11','B13','N47','H49','H41','N48','C12','C13','H42','H45','H50','I40','I41','I42','H51','N46')
+                   ) B
+            WHERE A.CODE = B.AREA_GB
+           ) B
+        ON A.AREA_CD = B.AREA_CD
+ LEFT JOIN KOSCO.BBAT051 C
+       ON A.VENDOR_CD = C.VENDOR_CD
+ LEFT JOIN KOSCO.BCOD011 D
+       ON A.CAR_TYPE = D.CODE
+      AND D.GUBUN = 'H003'
+ LEFT JOIN WSSDBO.WSS_RECORD_DATA E
+        ON A.SG = E.SG
+       AND A.DT = E.DT
+       AND A.SEQ = E.SEQ
+       AND E.WBRDG_SET_IO = 'IN' 
+ LEFT JOIN WSSDBO.WSS_RECORD_DATA F
+        ON A.SG = F.SG
+       AND A.DT = F.DT
+       AND A.SEQ = F.SEQ
+       AND F.WBRDG_SET_IO = 'OUT'
+ LEFT JOIN KOSCO.BWAT010 H
+        ON A.REF_SG = H.SG
+       AND A.REF_DT = H.DT
+       AND A.REF_SEQ = H.SEQ
+     WHERE A.CATEGORY = '5'
+     <choose>
+         <when test='dt != null and dt !=""'>
+         AND A.DT = REPLACE(#{dt}, '-')
+         </when>
+         <otherwise>
+         AND A.DT BETWEEN NVL(REPLACE(#{dt}, '-'), TO_CHAR(TRUNC(SYSDATE - 7, 'DD'), 'YYYYMMDD')) AND NVL(REPLACE(#{dt}, '-'), TO_CHAR(TRUNC(SYSDATE + 7, 'DD'), 'YYYYMMDD'))
+         </otherwise>
+     </choose>
+     <if test='custCd != null and custCd !=""'>
+       AND A.CAR_CD = #{custCd}
+     </if>
+     <if test='prodCd1 != null and prodCd1 !=""'>
+       AND A.PROD_CD1 = #{prodCd1}
+     </if>
+     <if test='prodNm != null and prodNm !=""'>
+       AND A.PROD_NM LIKE '%' || #{prodNm} || '%'
+     </if>
+     <if test='status != null and status !=""'>
+       AND A.STATUS_CD = #{status}
+     </if>
+     <if test='carNo != null and carNo !=""'>
+       AND A.CAR_NO LIKE '%' || #{carNo} || '%'
+     </if>
+     <if test='saveGB != null and saveGB !=""'>
+       AND A.IN_GB = #{saveGB}
+     </if>
+     <if test='ioGb != null and ioGb !=""'>
+       AND A.IO_GB = #{ioGb}
+     </if> 
+     ORDER BY A.DT, A.CAR_NO, A.TURN
+    </select>
+
+    <insert id="insertSafetyDispatch">
+    INSERT INTO WSSDBO.BWAT011
+    (
+         SG
+        ,DT
+        ,SEQ
+        ,CATEGORY
+        ,TURN
+        ,IO_GB
+        ,ST_GB
+        ,ETM
+        ,OTM
+        ,CAR_NO
+        ,CAR_CD
+        ,CUST_CD
+        ,CUST_NM
+        ,DRV_NM
+        ,DRV_TEL
+        ,PROD_NM
+        ,SAL_DT
+        ,SAL_JNO
+        ,PROD_GB
+        ,PROD_CD
+        ,PROD_CD1
+        ,GRADE
+        ,GRADE_NM
+        ,AREA_CD
+        ,VENDOR_CD
+        ,DECREASE_CODE
+        ,DECREASE_WGT
+        ,CAR_TYPE
+        ,ADD_CD
+        ,MIX_CD
+        ,PT_COUNT
+        ,BANPUM_YN
+        ,COT_NUM
+        ,REF_SG
+        ,REF_DT
+        ,REF_SEQ
+        ,BIGO
+        ,IN_GB
+        ,STATUS_CD
+        ,IS_NO
+        ,IS_DT
+    )
+    VALUES
+    (
+         #{sg}
+        ,REPLACE(#{dt}, '-')
+        ,(SELECT NVL(MAX(SEQ), 0) + 1 FROM WSSDBO.BWAT011 WHERE DT = REPLACE(#{dt}, '-'))
+        ,#{category}
+        ,(SELECT NVL(MAX(TURN), 0) + 1 FROM WSSDBO.BWAT011 WHERE DT = REPLACE(#{dt}, '-') AND CAR_NO = #{carNo})
+        ,#{ioGb}
+        ,#{stGb}
+        ,#{etm}
+        ,#{otm}
+        ,#{carNo}
+        ,#{carCd}
+        ,null
+        ,#{custNm}
+        ,#{drvNm}
+        ,REPLACE(REPLACE(#{drvTel}, '-'), ' ', '')
+        ,#{prodNm}
+        ,#{salDt}
+        ,#{salJno}
+        ,#{prodGb}
+        ,#{prodCd}
+        ,#{prodCd1}
+        ,null
+        ,#{gradeNm}
+        ,#{areaCd}
+        ,#{vendorCd}
+        ,#{decreaseCode}
+        ,#{decreaseWgt}
+        ,#{carType}
+        ,#{addCd}
+        ,#{mixCd}
+        ,#{ptCount}
+        ,#{banpumYn}
+        ,#{cotNum}
+        ,#{refSg}
+        ,#{refDt}
+        ,#{refSeq}
+        ,#{bigo}
+        ,'2'
+        ,'100'
+        ,#{isNo}
+        ,SYSDATE
+    )
+    </insert>
+
+    <update id="updateSafetyDispatch">
+    UPDATE WSSDBO.BWAT011
+       SET DT            = REPLACE(#{dt}, '-')
+          ,CATEGORY      = #{category}
+          ,CAR_NO        = #{carNo}
+          ,CAR_CD        = #{carCd}
+          <!-- ,CUST_CD       = #{custCd} -->
+          ,CUST_NM       = #{custNm}
+          ,DRV_NM        = #{drvNm}
+          ,DRV_TEL       = REPLACE(REPLACE(#{drvTel}, '-'), ' ', '')
+          ,PROD_NM       = #{prodNm}
+          ,PROD_CD       = #{prodCd}
+          ,PROD_CD1      = #{prodCd1}
+          ,GRADE         = #{grade}
+          ,GRADE_NM      = #{gradeNm}
+          ,AREA_CD       = #{areaCd}
+          ,VENDOR_CD     = #{vendorCd}
+          ,CAR_TYPE      = #{carType}
+          ,COT_NUM       = #{cotNum}
+	      ,BIGO          = #{bigo}
+          ,UP_NO         = #{sysUserId}
+          ,UP_DT         = sysdate
+          <if test='RENEW_DT == "Y" and RENEW_TURN == "Y"'>
+          ,TURN          = (SELECT NVL(MAX(TURN), 0) + 1 FROM WSSDBO.BWAT011 WHERE DT = REPLACE(#{dt}, '-') AND CAR_NO = #{carNo})
+          ,SEQ           = (SELECT NVL(MAX(SEQ), 0) + 1 FROM WSSDBO.BWAT011 WHERE DT = REPLACE(#{dt}, '-'))
+          </if>
+          <if test='RENEW_DT == "Y" and RENEW_TURN == "N"'>
+          ,TURN          = (SELECT NVL(MAX(TURN), 0) + 1 FROM WSSDBO.BWAT011 WHERE DT = REPLACE(#{dt}, '-') AND CAR_NO = #{carNo})
+          ,SEQ           = (SELECT NVL(MAX(SEQ), 0) + 1 FROM WSSDBO.BWAT011 WHERE DT = REPLACE(#{dt}, '-'))
+          </if>
+          <if test='RENEW_DT == "N" and RENEW_TURN == "Y"'>
+          ,TURN          = (SELECT NVL(MAX(TURN), 0) + 1 FROM WSSDBO.BWAT011 WHERE DT = REPLACE(#{dt}, '-') AND CAR_NO = #{carNo})
+          </if>
+     WHERE SG  = #{sg}
+       AND DT  = REPLACE(#{orgDt}, '-')
+       AND SEQ = #{seq}
+       AND STATUS_CD = '100'
+    </update>
+    
+    <resultMap id="dispatchOneMap" type="egovMap" />
+    <select id="selectDispatchOne" parameterType="hashMap" resultMap="dispatchOneMap">
+    SELECT DT, CAR_NO, CUST_CD, CAR_CD
+      FROM WSSDBO.BWAT011
+     WHERE SG = #{sg}
+       AND DT = REPLACE(#{orgDt}, '-')
+       AND SEQ = #{seq}
+    </select>
+
+    <delete id="deleteSafetyDispatch">
+    DELETE FROM WSSDBO.BWAT011
+     WHERE SG = #{sg}
+       AND DT = REPLACE(#{orgDt}, '-')
+       AND SEQ = #{seq}
+       AND STATUS_CD = '100'
+    </delete>
+
+</mapper>

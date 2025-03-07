@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- 
+ * 공통코드 관리 iBatis SqlMap으로서 작용한다.
+ * @Company : DONGYEN S&t, Ltd.
+ * @Copyright : Copyright (C) by DONGYEN S&t All rights reserved.
+ * @Author : 류승우
+ * @Create : 2022년 02월 25일
+  -->
+<mapper namespace="common.menu">
+    
+    <resultMap id="menuMap" type="egovMap" />    
+    <select id="searchMenuList"  parameterType="hashMap" resultMap="menuMap">
+
+    SELECT MENU_ID,
+           UPPER_MENU_ID,    
+           MENU_NM_KOR,
+           MENU_NM_ENG,
+           MENU_URL,
+           MENU_LVL,
+           SORT_SEQ,
+           MENU_DESC, 
+           USE_YN     
+      FROM TB_MENU A
+     WHERE MENU_ID LIKE '%' || #{menuId} || '%'
+       AND MENU_NM_KOR LIKE '%' || #{menuNmKor} || '%'
+  ORDER BY MENU_ID,
+           MENU_LVL,
+           SORT_SEQ
+    </select>    
+    
+    
+    <insert id="saveMenuList_I"  parameterType="hashMap">
+    INSERT INTO TB_MENU
+    (
+        MENU_ID,
+        UPPER_MENU_ID,
+        MENU_NM_KOR,
+        MENU_NM_ENG,
+        MENU_URL,
+        MENU_LVL,
+        SORT_SEQ,
+        MENU_DESC,
+        USE_YN,
+        INPT_DT,
+        INPT_ID,
+        INPT_IP,
+        UPDT_DT,
+        UPDT_ID,
+        UPDT_IP
+    )
+    VALUES
+    (
+        #{menuId},
+        #{upperMenuId}, 
+        #{menuNmKor},
+        #{menuNmEng},
+        #{menuUrl},
+        #{menuLvl},
+        #{sortSeq},
+        #{menuDesc},            
+        #{useYn},
+        SYSDATE,
+        #{sysUserId},
+        #{sysUserIp},
+        SYSDATE,
+        #{sysUserId},
+        #{sysUserIp}            
+    )
+    </insert>
+    
+    <update id="saveMenuList_U"  parameterType="hashMap">
+    UPDATE TB_MENU 
+       SET UPPER_MENU_ID = NVL(#{upperMenuId}, UPPER_MENU_ID),
+           MENU_NM_KOR = NVL(#{menuNmKor}, MENU_NM_KOR),
+           MENU_NM_ENG = NVL(#{menuNmEng}, MENU_NM_ENG),
+           MENU_URL = NVL(#{menuUrl}, MENU_URL),
+           MENU_LVL = NVL(#{menuLvl}, MENU_LVL),
+           SORT_SEQ = NVL(#{sortSeq}, SORT_SEQ),
+           MENU_DESC = NVL(#{menuDesc}, MENU_DESC),
+           USE_YN = NVL(#{useYn}, USE_YN),
+           UPDT_DT = SYSDATE ,
+           UPDT_ID = #{sysUserId} ,
+           UPDT_IP = #{sysUserIp} 
+     WHERE MENU_ID = #{menuId}
+    </update>
+    
+    <delete id="saveMenuList_D"  parameterType="hashMap">
+    DELETE FROM TB_MENU WHERE MENU_ID = #{menuId}
+    </delete>
+    
+     
+    
+    <resultMap id="menuListMap" type="egovMap" />    
+    <select id="searchUserMenuList"  parameterType="hashMap" resultMap="menuListMap">
+    <!--
+         {
+            CALL searchUserMenuList(#{userId}, #{menuNmKor}, #{result, mode=OUT, jdbcType=CURSOR, javaType=java.sql.ResultSet, resultMap=menuListMap} )            
+         }
+    -->
+     WITH TLB1 AS (
+                   SELECT DISTINCT MENU_ID
+                     FROM TB_MENU B
+               START WITH MENU_ID IN (
+                                           SELECT DISTINCT tm.MENU_ID 
+                                             FROM TB_MENU_AUTH tma
+                                       INNER JOIN TB_MENU tm ON tma.MENU_ID = tm.MENU_ID
+                                       INNER JOIN TB_AUTH ta ON tma.AUTH_ID = ta.AUTH_ID
+                                       INNER JOIN TB_AUTH_GROUP tag ON tma.AUTH_ID = tag.AUTH_ID
+                                       INNER JOIN TB_GROUP_USER tgu ON tag.GROUP_ID = tgu.GROUP_ID
+                                            WHERE tgu.USER_ID = #{userId} AND tm.USE_YN = 'Y'
+                                     )
+               CONNECT BY PRIOR UPPER_MENU_ID = MENU_ID 
+                  )
+    SELECT MENU_ID,
+           UPPER_MENU_ID,
+           CONNECT_BY_ROOT MENU_ID AS ROOT_MENU_ID,
+           MENU_NM_KOR,
+           MENU_NM_ENG,
+           MENU_URL,
+           MENU_LVL,
+           LTRIM(SYS_CONNECT_BY_PATH (MENU_NM_KOR, ' > '), ' > ') AS DEPT_NM_KOR,            
+           LTRIM(SYS_CONNECT_BY_PATH (MENU_NM_ENG, ' > '), ' > ') AS DEPT_NM_ENG
+      FROM TB_MENU A
+     WHERE MENU_ID IN (
+                        SELECT MENU_ID FROM TLB1 
+                      )
+	START WITH MENU_LVL = 1
+	CONNECT BY PRIOR MENU_ID = UPPER_MENU_ID AND MENU_NM_KOR LIKE '%' || #{menuNmKor} || '%'
+	ORDER SIBLINGS BY MENU_LVL,
+	                  SORT_SEQ
+    </select>    
+    
+    <resultMap id="menuAuthMap" type="egovMap" />    
+    <select id="searchMenuAuthInfo"  parameterType="hashMap" resultMap="menuAuthMap">
+    <!--
+         {
+            CALL searchMenuAuthInfo(#{userId}, #{menuId}, #{result, mode=OUT, jdbcType=CURSOR, javaType=java.sql.ResultSet, resultMap=menuListMap} )            
+         }
+    -->
+    SELECT * FROM (            
+                    SELECT tm.MENU_ID,
+                           tm.MENU_NM_KOR,
+                           tm.MENU_NM_ENG,
+                           tm.MENU_URL,
+                           tm.MENU_DESC,
+                           tm.MENU_LVL,
+                           tm.SORT_SEQ,
+                           tma.SEARCH_AUTH_YN,
+                           tma.SAVE_AUTH_YN,
+                           tma.NEW_AUTH_YN,
+                           tma.DEL_AUTH_YN,
+                           tma.EXCEL_AUTH_YN,
+                           tma.PRINT_AUTH_YN,
+                           tma.ADD1_AUTH_YN,
+                           tma.ADD2_AUTH_YN,
+                           tma.ADD3_AUTH_YN,
+                           tma.ADD4_AUTH_YN,
+                           ROW_NUMBER() OVER(PARTITION BY tm.MENU_ID ORDER BY tm.MENU_ID) row_num              
+                      FROM TB_MENU_AUTH tma
+                INNER JOIN TB_MENU tm ON tma.MENU_ID = tm.MENU_ID             
+                INNER JOIN TB_AUTH ta ON tma.AUTH_ID = ta.AUTH_ID 
+                INNER JOIN TB_AUTH_GROUP tag ON tma.AUTH_ID = tag.AUTH_ID 
+                INNER JOIN TB_GROUP_USER tgu ON tag.GROUP_ID = tgu.GROUP_ID 
+                     WHERE tgu.USER_ID = #{userId}
+                     <if test='menuId != "" and menuId != null'>
+                       AND tm.MENU_ID = #{menuId}
+                     </if>
+                       AND tm.USE_YN = 'Y'        
+                  ORDER BY MENU_ID, MENU_LVL, SORT_SEQ
+    ) WHERE row_num = 1
+    </select>    
+        
+</mapper>

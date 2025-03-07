@@ -1,0 +1,323 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- 
+ * 공통코드 관리 iBatis SqlMap으로서 작용한다.
+ * @Company : DONGYEN S&t, Ltd.
+ * @Copyright : Copyright (C) by DONGYEN S&t All rights reserved.
+ * @Author : 류승우
+ * @Create : 2022년 03월 14일
+  -->
+<mapper namespace="common.auth">
+
+    <resultMap id="authMap" type="egovMap" />
+    <select id="searchAuthList"  parameterType="hashMap" resultMap="authMap">
+    <!--
+         {
+            CALL searchAuthList(#{schAuthId}, #{schAuthNm}, #{result, mode=OUT, jdbcType=CURSOR, javaType=java.sql.ResultSet, resultMap=authMap} )            
+         }
+     -->
+      SELECT AUTH_ID,
+             AUTH_NM,
+             TO_CHAR(AUTH_VLDT_STRT_DT, 'YYYY-MM-DD') AUTH_VLDT_STRT_DT,
+             TO_CHAR(AUTH_VLDT_END_DT, 'YYYY-MM-DD') AUTH_VLDT_END_DT,    
+             AUTH_DESC,
+             RMKS,
+             USE_YN
+        FROM TB_AUTH A    
+       WHERE AUTH_ID LIKE '%' || #{schAuthId} || '%'
+         AND AUTH_NM LIKE '%' || #{schAuthNm} || '%'
+    ORDER BY AUTH_ID, AUTH_NM
+    </select>    
+    
+<!--
+    <select id="saveAuthList"  parameterType="hashMap" statementType="CALLABLE">
+         {
+            CALL saveAuthList(
+                #{status}, 
+                #{authId},                  
+                #{authNm},
+                #{authVldtStrtDt},
+                #{authVldtEndDt},
+                #{authDesc},
+                #{rmks},                                                
+                #{useYn},
+                #{sysUserId},
+                #{sysUserIp}
+            )            
+        
+        }     
+    </select>    
+-->
+    <insert id="saveAuthList_I">
+	INSERT INTO TB_AUTH (
+		AUTH_ID,
+		AUTH_NM,
+		AUTH_VLDT_STRT_DT,
+		AUTH_VLDT_END_DT, 
+		AUTH_DESC,
+		RMKS,			
+		USE_YN,
+		INPT_DT,
+		INPT_ID,
+		INPT_IP,
+		UPDT_DT,
+		UPDT_ID,
+		UPDT_IP
+	)
+	VALUES (
+		#{authId},
+		#{authNm},
+		#{authVldtStrtDt},
+		#{authVldtEndDt},
+		#{authDesc},
+		#{rmks},
+		#{useYn},
+		SYSDATE,
+		#{sysUserId},
+		#{sysUserIp},
+		SYSDATE,
+		#{sysUserId},
+		#{sysUserIp}			
+	)
+    </insert>
+    
+    <update id="saveAuthList_U">
+    UPDATE TB_AUTH 
+       SET AUTH_NM = NVL(#{authNm}, AUTH_NM),
+           AUTH_VLDT_STRT_DT = NVL(#{authVldtStrtDt}, AUTH_VLDT_STRT_DT),
+           AUTH_VLDT_END_DT = NVL(#{authVldtEndDt}, AUTH_VLDT_END_DT),
+           AUTH_DESC = NVL(#{authDesc}, AUTH_DESC),
+           RMKS = #{rmks},
+           USE_YN = NVL(#{useYn}, USE_YN),
+           UPDT_DT = SYSDATE ,
+           UPDT_ID = #{sysUserId} ,
+           UPDT_IP = #{sysUserIp} 
+     WHERE AUTH_ID = #{authId}
+    </update>
+    
+    <delete id="saveAuthList_D">
+    DELETE FROM TB_AUTH WHERE AUTH_ID = #{authId}
+    </delete>
+
+
+    <select id="searchAuthMenuList"  parameterType="hashMap" resultMap="authMap">
+	<!--
+         {
+            CALL searchAuthMenuList(#{schAuthId},  #{result, mode=OUT, jdbcType=CURSOR, javaType=java.sql.ResultSet, resultMap=authMap} )                    
+        }
+	-->
+	SELECT tma.MENU_ID,
+	       tm.MENU_NM_KOR, 
+	       AUTH_ID,
+	       SEARCH_AUTH_YN,
+	       SAVE_AUTH_YN,
+	       NEW_AUTH_YN,
+	       DEL_AUTH_YN,
+	       EXCEL_AUTH_YN,
+	       PRINT_AUTH_YN,	
+	       RMKS
+      FROM TB_MENU_AUTH tma
+INNER JOIN TB_MENU tm 
+        ON tma.MENU_ID = tm.MENU_ID
+     WHERE AUTH_ID = #{schAuthId}
+  ORDER BY tm.MENU_ID ,tm.MENU_LVL, tm.SORT_SEQ
+    </select>
+
+<!--    
+    <select id="saveAuthMenuList"  parameterType="hashMap" statementType="CALLABLE">
+         {
+            CALL saveAuthMenuList(
+                #{status},
+                #{menuId},     
+                #{authId},                  
+                #{searchAuthYn},
+                #{saveAuthYn},
+                #{newAuthYn},
+                #{delAuthYn},
+                #{excelAuthYn},
+                #{printAuthYn},                
+                #{rmks},
+                #{sysUserId},
+                #{sysUserIp}
+            )    
+
+        }     
+    </select>
+-->
+    <insert id="saveAuthMenuList_I">
+	INSERT INTO TB_MENU_AUTH (
+		MENU_ID,
+		AUTH_ID,
+		SEARCH_AUTH_YN,
+		SAVE_AUTH_YN,
+		NEW_AUTH_YN,
+		DEL_AUTH_YN,
+		EXCEL_AUTH_YN, 
+		PRINT_AUTH_YN,	
+		RMKS,
+		INPT_DT,
+		INPT_ID,
+		INPT_IP,
+		UPDT_DT,
+		UPDT_ID,
+		UPDT_IP
+	)
+	VALUES (
+		#{menuId},
+		#{authId},
+		#{searchAuthYn},
+		#{saveAuthYn},
+		#{newAuthYn},
+		#{delAuthYn},
+		#{excelAuthYn},
+		#{printAuthYn},
+		#{rmks},
+		SYSDATE,
+		#{sysUserId},
+		#{sysUserIp},
+		SYSDATE,
+		#{sysUserId},
+		#{sysUserIp}
+	)
+    </insert>
+    
+    <update id="saveAuthMenuList_U">
+	UPDATE TB_MENU_AUTH 
+       SET SEARCH_AUTH_YN = NVL(#{searchAuthYn}, SEARCH_AUTH_YN),
+		   SAVE_AUTH_YN = NVL(#{saveAuthYn}, SAVE_AUTH_YN),
+		   NEW_AUTH_YN = NVL(#{newAuthYn}, NEW_AUTH_YN),
+		   DEL_AUTH_YN = NVL(#{delAuthYn}, DEL_AUTH_YN),
+		   EXCEL_AUTH_YN = NVL(#{excelAuthYn}, EXCEL_AUTH_YN),
+		   PRINT_AUTH_YN = NVL(#{printAuthYn}, PRINT_AUTH_YN),			
+		   RMKS = NVL(#{rmks}, RMKS),
+		   UPDT_DT = SYSDATE ,
+		   UPDT_ID = #{sysUserId},
+		   UPDT_IP = #{sysUserIp} 
+	 WHERE AUTH_ID = #{authId} AND MENU_ID = #{menuId}
+    </update>
+    
+    <delete id="saveAuthMenuList_D">
+    DELETE FROM TB_MENU_AUTH WHERE AUTH_ID = #{authId} AND MENU_ID = #{menuId}
+    </delete>
+    
+    
+    <select id="searchAuthGroupList"  parameterType="hashMap" resultMap="authMap">
+    <!--
+         {
+            CALL searchAuthGroupList(#{schAuthId},  #{result, mode=OUT, jdbcType=CURSOR, javaType=java.sql.ResultSet, resultMap=authMap} )                    
+        }
+    -->
+	SELECT tag.GROUP_ID,
+		   tag.AUTH_ID,
+		   GROUP_NM,
+		   GROUP_DESC,
+		   tag.RMKS
+	  FROM TB_AUTH_GROUP tag
+INNER JOIN TB_GROUP tg ON tag.GROUP_ID = tg.GROUP_ID
+	 WHERE tag.AUTH_ID = #{schAuthId}
+  ORDER BY tg.GROUP_NM
+    </select>
+    <!--
+    <select id="saveAuthGroupList"  parameterType="hashMap" statementType="CALLABLE">
+         {
+            CALL saveAuthGroupList(
+                #{status},
+                #{groupId},     
+                #{authId},                  
+                #{rmks},
+                #{sysUserId},
+                #{sysUserIp}
+            )    
+
+        }     
+    </select>    
+    -->
+    <insert id="saveAuthGroupList_I">
+	INSERT INTO TB_AUTH_GROUP (
+		GROUP_ID,
+		AUTH_ID,
+		RMKS,
+		INPT_DT,
+		INPT_ID,
+		INPT_IP,
+		UPDT_DT,
+		UPDT_ID,
+		UPDT_IP
+	)
+	VALUES (
+		#{groupId},
+		#{authId},
+		#{rmks},
+		SYSDATE,
+		#{sysUserId},
+		#{sysUserIp}, 
+		SYSDATE,
+		#{sysUserId},
+		#{sysUserIp}			
+	)
+    </insert>
+    
+    <update id="saveAuthGroupList_U">
+	UPDATE TB_AUTH_GROUP 
+	   SET UPDT_DT = SYSDATE ,
+		   UPDT_ID = #{sysUserId},
+		   UPDT_IP = #{sysUserIp}
+	 WHERE GROUP_ID = #{groupId} 
+	   AND AUTH_ID = #{authId}
+    </update>
+    
+    <delete id="saveAuthGroupList_D">
+    DELETE FROM TB_AUTH_GROUP 
+     WHERE GROUP_ID = #{groupId} 
+       AND AUTH_ID = #{authId}
+    </delete>
+    
+    
+    <select id="saveUserLog"  parameterType="hashMap" statementType="CALLABLE">
+    <!--
+         {
+            CALL saveUserLog(
+                #{userId},
+                #{cnntBrwr},     
+                #{cnntOps},                  
+                #{cnntIp},
+                #{useHisCntn},
+                #{sysMenuId},
+                #{sysUserIp}
+            )    
+        }
+    -->
+	INSERT INTO TB_USER_LOG (
+		LOG_SEQ,
+		USER_ID,
+		CNNT_BRWR,
+		CNNT_OPS,
+		CNNT_IP,
+		USE_HIS_CNTN,
+		MENU_ID,
+		INPT_DT,
+		INPT_ID,
+		INPT_IP,
+		UPDT_DT,
+		UPDT_ID,
+		UPDT_IP
+	)
+	VALUES (
+		LOG_SEQ.NEXTVAL,
+		#{userId},
+		#{cnntBrwr},
+		#{cnntOps},
+		#{cnntIp},
+		#{useHisCntn},
+		#{sysMenuId},
+		SYSDATE,
+		#{userId},
+		#{sysUserIp},
+		SYSDATE,
+		#{userId},
+		#{sysUserIp}			
+	)
+    </select>    
+
+</mapper>

@@ -1,0 +1,205 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- 
+ * 공통코드 관리 iBatis SqlMap으로서 작용한다.
+ * @Company : DONGYEN S&t, Ltd.
+ * @Copyright : Copyright (C) by DONGYEN S&t All rights reserved.
+ * @Author : 류승우
+ * @Create : 2022년 03월 16일
+  -->
+<mapper namespace="common.group">
+
+    <resultMap id="userMap" type="egovMap" />    
+    <select id="searchUserList"  parameterType="hashMap" resultMap="userMap">
+<!--
+         {
+            CALL searchUserList( #{schUserId}, #{schUserNmKor}, #{result, mode=OUT, jdbcType=CURSOR, javaType=java.sql.ResultSet, resultMap=userMap} )    
+         }
+ -->
+      SELECT USER_ID,
+             SYSTEM_CD,
+             EMP_NO,
+             NM_KOR,
+             NM_CHN,
+             EMAIL,
+             DPT_CD,
+             DPT_NM,
+             TEL_NO,
+             MOBILE_NO,
+             RSOF_CD,
+             RSOF_NM,
+             PLBS_CD,
+             GENDER
+        FROM TB_USER A     
+       WHERE USER_ID LIKE '%' || #{schUserId} || '%'
+         AND NM_KOR LIKE '%' || #{schUserNmKor} || '%'
+    ORDER BY NM_KOR, DPT_NM
+    </select>
+    
+    <resultMap id="groupMap" type="egovMap" />    
+    <select id="searchGroupList"  parameterType="hashMap" resultMap="groupMap">
+    <!--
+         {
+            CALL searchGroupList( #{schGroupNm}, #{result, mode=OUT, jdbcType=CURSOR, javaType=java.sql.ResultSet, resultMap=groupMap} )    
+         }
+    -->
+    SELECT GROUP_ID,
+           GROUP_NM,
+           GROUP_DESC,
+           RMKS,
+           USE_YN
+      FROM TB_GROUP A    
+     WHERE GROUP_NM LIKE '%' || #{schGroupNm} || '%'
+     <if test='schGroupId != null and schGroupId != ""'>
+       AND GROUP_ID LIKE '%' || #{schGroupId} || '%'
+     </if>
+  ORDER BY GROUP_ID, GROUP_NM
+    </select>
+    
+<!-- 
+    <select id="saveGroupList"  parameterType="hashMap" resultMap="groupMap">
+         {
+            CALL saveGroupList(
+                #{status}, 
+                #{groupId},                  
+                #{groupNm},
+                #{groupDesc},
+                #{rmks},                                                
+                #{useYn},
+                #{sysUserId},
+                #{sysUserIp}
+            )            
+        
+        }     
+    </select>    
+ -->
+    <insert id="saveGroupList_I">
+    INSERT INTO TB_GROUP (
+        GROUP_ID,
+        GROUP_NM,
+        GROUP_DESC,
+        RMKS,            
+        USE_YN,
+        INPT_DT,
+        INPT_ID,
+        INPT_IP,
+        UPDT_DT,
+        UPDT_ID,
+        UPDT_IP
+    )
+    VALUES (
+        #{groupId},
+        #{groupNm},
+        #{groupDesc},
+        #{rmks},                
+        #{useYn},
+        SYSDATE,
+        #{sysUserId},
+        #{sysUserIp},
+        SYSDATE,
+        #{sysUserId},
+        #{sysUserIp}
+    )
+    </insert>
+    
+    <update id="saveGroupList_U">
+    UPDATE TB_GROUP 
+       SET GROUP_NM = NVL(#{groupNm}, GROUP_NM),
+           GROUP_DESC = NVL(#{groupDesc}, GROUP_DESC),
+           RMKS = NVL(#{rmks}, RMKS),
+           USE_YN = NVL(#{useYn}, USE_YN),
+           UPDT_DT = SYSDATE,
+           UPDT_ID = #{sysUserId},
+           UPDT_IP = #{sysUserIp} 
+     WHERE GROUP_ID = #{groupId}
+    </update>
+    
+    <delete id="saveGroupList_D">
+    DELETE FROM TB_GROUP
+     WHERE GROUP_ID = #{groupId}
+    </delete>
+ 
+ 
+    <select id="searchGroupUserList"  parameterType="hashMap" resultMap="groupMap">
+    <!--
+         {
+            CALL searchGroupUserList(#{schGroupId},  #{result, mode=OUT, jdbcType=CURSOR, javaType=java.sql.ResultSet, resultMap=groupMap} )                    
+         }
+    -->
+      SELECT tgu.GROUP_ID, 
+             tgu.USER_ID,
+             SYSTEM_CD, 
+             EMP_NO,
+             NM_KOR,
+             NM_CHN,
+             EMAIL,
+             DPT_CD,
+             DPT_NM,
+             TEL_NO,
+             MOBILE_NO,
+             RSOF_CD,
+             RSOF_NM,
+             PLBS_CD,
+             GENDER
+        FROM TB_GROUP_USER tgu 
+  INNER JOIN TB_USER tu 
+          ON tgu.USER_ID = tu.USER_ID 
+       WHERE GROUP_ID = #{schGroupId}
+    ORDER BY NM_KOR, DPT_NM
+    </select>
+
+<!--
+    <select id="saveGroupUserList"  parameterType="hashMap" statementType="CALLABLE">
+         {
+            CALL saveGroupUserList(
+                #{status},                     
+                #{groupId},                  
+                #{userId},                
+                #{sysUserId},
+                #{sysUserIp}
+            )
+        }     
+    </select>
+-->
+    <insert id="saveGroupUserList_I">
+    INSERT INTO TB_GROUP_USER 
+    (
+        GROUP_ID,
+        USER_ID,
+        INPT_DT,
+        INPT_ID,
+        INPT_IP,
+        UPDT_DT,
+        UPDT_ID,
+        UPDT_IP
+    )
+    VALUES
+    (
+        #{groupId},
+        #{userId},
+        SYSDATE,
+        #{sysUserId},
+        #{sysUserIp},
+        SYSDATE,
+        #{sysUserId},
+        #{sysUserIp}
+    )
+    </insert>
+
+    <update id="saveGroupUserList_U">
+    UPDATE TB_GROUP_USER 
+       SET UPDT_DT = SYSDATE, 
+           UPDT_ID = #{sysUserId},
+           UPDT_IP = #{sysUserIp} 
+     WHERE GROUP_ID = #{groupId}
+       AND USER_ID = #{guserId}
+    </update>
+    
+    <delete id="saveGroupUserList_D">
+    DELETE FROM TB_GROUP_USER 
+     WHERE GROUP_ID = #{groupId}
+       AND USER_ID = #{userId}
+    </delete>
+
+</mapper>

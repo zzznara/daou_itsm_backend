@@ -1,0 +1,272 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- 
+ * 공통코드 관리 iBatis SqlMap으로서 작용한다.
+ * @Company : DONGYEN S&t, Ltd.
+ * @Copyright : Copyright (C) by DONGYEN S&t All rights reserved.
+ * @Author : 류승우
+ * @Create : 2022년 03월 14일
+  -->
+<mapper namespace="weightsetting.inhouse">
+
+    <resultMap id="inhouseMap" type="egovMap" />
+    <select id="searchInHouseList"  parameterType="hashMap" resultMap="inhouseMap">
+
+	SELECT
+    	AB.*
+		FROM
+		(
+		    SELECT
+		          AAA.*
+		        , BB.CD_NM_KOR CATEGORY_NM
+		        , CC.CODE_NAME CAR_TYPE_NM
+		        , DD.VENDOR_NM
+		        , BB1.CD_NM_KOR IO_GB_NM
+		    FROM (
+		        SELECT
+		              A.SG
+		            , SUBSTR(A.DT, 0, 4) || '-' || SUBSTR(A.DT, 5, 2) || '-' || SUBSTR(A.DT, 7, 2) AS DT
+		            , A.SEQ
+		            , A.SG || A.DT || LPAD(TO_CHAR(A.SEQ), 4, '0')
+		                                ASSIGN_KEY
+		            , A.CATEGORY
+		            , A.IO_GB
+		            , A.TURN
+		            , A.CAR_NO
+		            , A.CUST_CD
+		            , A.CUST_NM
+		            , A.DRV_NM
+          			, REGEXP_REPLACE(REPLACE(A.DRV_TEL, '-', ''), '(.{3})(.+)(.{4})', '\1-\2-\3') AS DRV_TEL
+		            ,CASE WHEN A.PROD_NM IS NULL AND A.PROD_CD IS NOT NULL THEN ( 
+                                                                      	SELECT CODE_NAME
+                                                                          FROM KOSCO.BCOD011 AA
+                                                                         WHERE AA.GUBUN = 'H002'
+                                                                           AND AA.USE_GUBUN = '1'
+                                                                           AND AA.REF_1 = '1'
+                                                                           AND AA.REF_2 = A.PROD_CD1
+                                                                      )
+               			  ELSE A.PROD_NM
+           	  		       END AS PROD_NM
+		            , A.PROD_GB
+		            , A.PROD_CD
+		            , A.PROD_CD1
+		            , A.VENDOR_CD
+		            , A.GRADE
+		            , A.GRADE_NM
+		            , A.DECREASE_CODE
+		            , A.DECREASE_WGT
+		            , A.CAR_TYPE
+		            , A.ADD_CD
+		            , A.MIX_CD
+		            , A.BANPUM_YN
+		            , A.COT_NUM
+		            , A.REF_SG
+		            , A.REF_DT
+		            , A.REF_SEQ
+		            , A.STATUS_CD
+		            , B.TWGT
+		            , B.EWGT
+		            , B.WGT
+		            , B.MWGT
+		            , B.TTM
+		            , B.ETM
+		            , B.RETURN          RETURN_YN
+		            , CASE
+		                WHEN A.IO_GB = 1 THEN
+		                    B.TWGT
+		                ELSE
+		                    B.EWGT
+		            END IN_WEIGHT
+		            , CASE
+		                WHEN A.IO_GB = 1 THEN
+		                    B.TTM
+		                ELSE
+		                    B.ETM
+		            END IN_TTM
+		        FROM
+		            WSSDBO.BWAT011                              A
+		                LEFT OUTER JOIN KOSCO.BWAT010           B
+		                             ON A.REF_SG                    = B.SG
+		                            AND A.REF_DT                    = B.DT
+		                            AND A.REF_SEQ                   = B.SEQ
+		                            AND REPLACE(A.CAR_NO, ' ', '')  = REPLACE(B.CAR_NO, ' ', '')
+		                LEFT OUTER JOIN WSSDBO.REDUCE_CD_DETAIL C
+		                             ON A.DECREASE_CODE             = C.REDUCE_CD
+		                            AND A.CUST_CD                   = C.CUST_CD
+		                LEFT OUTER JOIN WSSDBO.REDUCE_CD_DETAIL D
+		                             ON A.DECREASE_CODE             = D.REDUCE_CD
+		                            AND D.CUST_CD                   = 'ALL'
+		          WHERE   1 = 1
+		     		<if test='category != null and category !=""'>
+		            AND A.CATEGORY LIKE '%' || #{category} || '%'
+		            </if>            
+		     		<if test='carNo != null and carNo !=""'>
+		            AND REPLACE(A.CAR_NO, ' ', '') LIKE '%' || #{carNo} || '%'
+		            </if>            		            
+			        <choose>
+				         <when test='dt != null and dt !=""'>
+				         AND A.DT = REPLACE(#{dt}, '-')
+				         </when>
+				         <otherwise>
+				         AND A.DT BETWEEN NVL(REPLACE(#{dt}, '-'), TO_CHAR(TRUNC(SYSDATE - 7, 'DD'), 'YYYYMMDD')) AND NVL(REPLACE(#{dt}, '-'), TO_CHAR(TRUNC(SYSDATE + 7, 'DD'), 'YYYYMMDD'))
+				         </otherwise>
+			        </choose>
+			        <if test='custCd != null and custCd != ""'>
+			        AND A.CUST_CD LIKE '%' || #{custCd} || '%'
+			        </if>
+			        <if test='prodCd1 != null and prodCd1 != ""'>
+			        AND A.PROD_CD1 LIKE '%' || #{prodCd1} || '%'
+			        </if>
+		            AND (A.ADD_CD IS NULL OR A.ADD_CD = '') 
+		            
+					<![CDATA[ 
+		            AND (A.STATUS_CD > 110)
+		            ]]>
+		            
+		            AND A.REF_SEQ IS NOT NULL
+		        
+		        UNION ALL
+		        
+		        SELECT
+		              A.SG
+		            , SUBSTR(A.DT, 0, 4) || '-' || SUBSTR(A.DT, 5, 2) || '-' || SUBSTR(A.DT, 7, 2) AS DT
+		            , MIN(A.SEQ)        SEQ
+		            , A.SG || A.DT || LPAD(TO_CHAR(MIN(A.SEQ)), 4, '0')
+		                                ASSIGN_KEY
+		            , MIN(A.CATEGORY)
+		            , A.IO_GB
+		            , MIN(A.TURN)       TURN
+		            , A.CAR_NO
+		            , MIN(A.CUST_CD)    CUST_CD
+		            , MIN(A.CUST_NM)    CUST_NM		            
+		            , ''                DRV_NM
+          			, REGEXP_REPLACE(REPLACE(A.DRV_TEL, '-', ''), '(.{3})(.+)(.{4})', '\1-\2-\3') AS DRV_TEL
+		            , MIN(A.PROD_NM)
+		            , ''                PROD_GB
+		            , ''                PROD_CD
+		            , ''                PROD_CD1
+		            , MIN(A.VENDOR_CD)  VENDOR_CD
+		            , ''                GRADE
+		            , ''                GRADE_NM
+		            , ''                DECREASE_CODE
+		            , 0                 DECREASE_WGT
+		            , A.CAR_TYPE
+		            , A.ADD_CD
+		            , ''                MIX_CD
+		            , MAX(A.BANPUM_YN)  BANPUM_YN
+		            , ''                COT_NUM
+		            , A.REF_SG          REF_SG
+		            , A.REF_DT          REF_DT
+		            , A.REF_SEQ         REF_SEQ
+		            , A.STATUS_CD
+		            , B.TWGT
+		            , B.EWGT
+		            , B.WGT
+		            , B.MWGT
+		            , B.TTM
+		            , B.ETM
+		            , MAX(B.RETURN)     RETURN_YN
+		            , CASE
+		                WHEN A.IO_GB = 1 THEN
+		                    B.TWGT
+		                ELSE
+		                    B.EWGT
+		            END IN_WEIGHT
+		            , CASE
+		                WHEN A.IO_GB = 1 THEN
+		                    B.TTM
+		                ELSE
+		                    B.ETM
+		            END IN_TTM
+		        
+		        FROM
+		            WSSDBO.BWAT011                      A
+		                LEFT OUTER JOIN KOSCO.BWAT010   B
+		                             ON A.REF_SG                    = B.SG
+		                            AND A.REF_DT                    = B.DT
+		                            AND TO_NUMBER(A.REF_SEQ)        = B.SEQ
+		                            AND REPLACE(A.CAR_NO, ' ', '')  = REPLACE(B.CAR_NO, ' ', '')
+		          WHERE 1 = 1
+		     		<if test='category != null and category !=""'>
+		            AND A.CATEGORY LIKE '%' || #{category} || '%'
+		            </if>            
+		     		<if test='carNo != null and carNo !=""'>
+		            AND REPLACE(A.CAR_NO, ' ', '') LIKE '%' || #{carNo} || '%'
+		            </if>    		            
+			        <choose>
+				         <when test='dt != null and dt !=""'>
+				         AND A.DT = REPLACE(#{dt}, '-')
+				         </when>
+				         <otherwise>
+				         AND A.DT BETWEEN NVL(REPLACE(#{dt}, '-'), TO_CHAR(TRUNC(SYSDATE - 7, 'DD'), 'YYYYMMDD')) AND NVL(REPLACE(#{dt}, '-'), TO_CHAR(TRUNC(SYSDATE + 7, 'DD'), 'YYYYMMDD'))
+				         </otherwise>
+			        </choose> 
+		            AND A.ADD_CD IS NOT NULL 
+		            <if test='custCd != null and custCd != ""'>
+		            AND A.CUST_CD LIKE '%' || #{custCd} || '%'
+		            </if>
+			        <if test='prodCd1 != null and prodCd1 != ""'>
+			        AND A.PROD_CD1 LIKE '%' || #{prodCd1} || '%'
+			        </if>
+		            
+					<![CDATA[ 
+		            AND (A.STATUS_CD > 110)
+		            ]]>
+		            
+		            AND A.REF_SEQ IS NOT NULL
+		        GROUP BY
+		              A.SG
+		            , A.DT
+		            , A.IO_GB
+		            , A.CAR_NO
+		            , A.DRV_TEL
+		            , A.STATUS_CD
+		            , A.CAR_TYPE
+		            , A.ADD_CD
+		            , A.BANPUM_YN
+		            , A.REF_SG
+		            , A.REF_DT
+		            , A.REF_SEQ
+		            , B.TWGT
+		            , B.EWGT
+		            , B.WGT
+		            , B.MWGT
+		            , B.TTM
+		            , B.ETM
+		    ) AAA
+		    LEFT OUTER JOIN
+		        TB_CD_DETAIL BB
+		            ON
+		                    BB.DETL_CD = AAA.CATEGORY
+		                AND BB.MAST_CD = 'CATEGORY_GBN_CD'
+		    LEFT OUTER JOIN
+		        KOSCO.BCOD011 CC
+		            ON
+		                    CC.CODE = AAA.CAR_TYPE
+		                AND CC.GUBUN = 'H003'
+		    LEFT OUTER JOIN
+		        KOSCO.BBAT051 DD
+            		ON
+                    		DD.VENDOR_CD = AAA.VENDOR_CD
+            
+		    LEFT OUTER JOIN 
+		        TB_CD_DETAIL BB1 ON
+		                    BB1.DETL_CD = AAA.IO_GB
+		                AND BB1.MAST_CD = 'BIZ_TYPE'
+		) AB
+		WHERE
+		    1 = 1
+		    
+		    <![CDATA[ 
+		    AND (AB.STATUS_CD < 800)
+		    ]]>
+		            
+		ORDER BY
+		   TO_NUMBER(AB.REF_SEQ) ASC, AB.SEQ ASC
+
+    </select>    
+    
+    
+
+</mapper>

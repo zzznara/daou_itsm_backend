@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+<!-- 
+ * 공통코드 관리 iBatis SqlMap으로서 작용한다.
+ * @Company : DONGYEN S&t, Ltd.
+ * @Copyright : Copyright (C) by DONGYEN S&t All rights reserved.
+ * @Author : 전현우
+ * @Create : 2024년 09월 19일
+  -->
+<mapper namespace="weightsetting.dispatchOrder">
+
+    <resultMap id="carListMap" type="egovMap" />
+    <select id="SearchCarList" parameterType="hashMap" resultMap="carListMap">
+    SELECT SUBSTR(A.DT, 0, 4) || '-' || SUBSTR(A.DT, 5, 2) || '-' || SUBSTR(A.DT, 7, 2) AS DT
+          ,A.CAR_NO
+          ,A.DRV_NM
+          ,A.DRV_TEL
+      FROM WSSDBO.BWAT011 A
+     WHERE A.DT = NVL(REPLACE(#{dt}, '-'), TO_CHAR(SYSDATE, 'YYYYMMDD'))
+       AND A.STATUS_CD = '100'
+     <if test='carNo != null and carNo != ""'>
+       AND A.CAR_NO LIKE '%' || #{carNo} || '%'
+     </if>
+     GROUP BY SUBSTR(A.DT, 0, 4) || '-' || SUBSTR(A.DT, 5, 2) || '-' || SUBSTR(A.DT, 7, 2), A.CAR_NO, A.DRV_NM, A.DRV_TEL
+     ORDER BY A.CAR_NO 
+    </select>
+    
+    <select id="SearchCarDispatchOrderList" parameterType="hashMap" resultMap="carListMap">
+    SELECT A.SG
+          ,SUBSTR(A.DT, 0, 4) || '-' || SUBSTR(A.DT, 5, 2) || '-' || SUBSTR(A.DT, 7, 2) AS DT
+          ,A.SEQ
+          ,A.CAR_NO
+          ,A.CATEGORY
+          ,CASE WHEN CATEGORY = '1' THEN '국내'
+                WHEN CATEGORY = '2' THEN '수입'
+                WHEN CATEGORY = '3' THEN '물류'
+                WHEN CATEGORY = '4' THEN '구매'
+                WHEN CATEGORY = '5' THEN '환경안전'
+                WHEN CATEGORY = '6' THEN '매출'
+                WHEN CATEGORY = '7' THEN '가공'
+                WHEN CATEGORY = '8' THEN '관수'
+                WHEN CATEGORY = '9' THEN '사내수불'
+                ELSE ''
+            END AS CATEGORY_NM
+          ,A.CUST_NM
+          ,CASE WHEN A.PROD_NM IS NULL AND A.PROD_CD IS NOT NULL THEN ( 
+                                                                      	SELECT CODE_NAME
+                                                                          FROM KOSCO.BCOD011 AA
+                                                                         WHERE AA.GUBUN = 'H002'
+                                                                           AND AA.USE_GUBUN = '1'
+                                                                           AND AA.REF_1 = '1'
+                                                                           AND AA.REF_2 = A.PROD_CD1
+                                                                      )
+                ELSE A.PROD_NM
+           END AS PROD_NM
+         ,A.TURN
+         ,A.IN_GB
+         ,A.IS_NO
+         ,A.MIX_CD
+         ,A.DRV_TEL
+         ,TO_CHAR(A.IS_DT, 'YYYY-MM-DD hh:mi:ss') AS IS_DT
+      FROM WSSDBO.BWAT011 A
+     WHERE A.DT = REPLACE(#{dt}, '-')
+       AND A.CAR_NO = #{carNo}
+       AND A.STATUS_CD = '100'
+  ORDER BY A.TURN
+    </select>
+    
+    <update id="updateCarDispatchOrderList">
+    UPDATE WSSDBO.BWAT011
+       SET TURN = #{turn} 
+          ,UP_NO         = #{sysUserId}
+          ,UP_DT         = sysdate
+     WHERE SG  = #{sg}
+       AND DT  = REPLACE(#{dt}, '-')
+       AND SEQ = #{seq}
+    </update>
+    
+    <resultMap id="cntMap" type="egovMap" />
+    <select id="chkRecord" parameterType="hashMap" resultMap="cntMap">
+    SELECT COUNT(*) AS CNT
+      FROM WSSDBO.WSS_RECORD_DATA
+     WHERE SG = #{sg}
+       AND DT = REPLACE(#{dt}, '-')
+       AND SEQ = #{seq}
+    </select>
+
+</mapper>

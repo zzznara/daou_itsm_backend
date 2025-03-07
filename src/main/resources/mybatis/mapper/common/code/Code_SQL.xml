@@ -1,0 +1,598 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- 
+ * 공통코드 관리 iBatis SqlMap으로서 작용한다.
+ * @Company : DONGYEN S&t, Ltd.
+ * @Copyright : Copyright (C) by DONGYEN S&t All rights reserved.
+ * @Author : 류승우
+ * @Create : 2022년 01월 27일
+  -->
+<mapper namespace="common.code">
+	
+	<resultMap id="masterMap" type="egovMap" />	
+	<select id="searchMasterCode"  parameterType="hashMap" resultMap="masterMap">
+	
+	SELECT MAST_CD,   
+           CD_NM_KOR,
+           CD_NM_ENG,
+           CD_DESC,
+           USE_YN,
+           INPT_DT,
+           INPT_ID,
+           INPT_IP,
+           UPDT_DT,
+           UPDT_ID,
+           UPDT_IP
+	  FROM TB_CD_MASTER 
+	 WHERE MAST_CD LIKE '%' || #{mastCd} || '%'
+	   AND CD_NM_KOR LIKE '%' || #{cdNmKor} || '%'
+	   AND USE_YN  = NVL(#{useYn}, USE_YN)
+  	 ORDER BY CD_NM_KOR  
+
+	</select>
+	
+	<resultMap id="detailMap" type="egovMap" />	
+	
+	
+	<select id="searchDetailCode" parameterType="hashMap" resultMap="detailMap">
+
+    SELECT DETL_CD,
+           MAST_CD,
+           CD_NM_KOR,
+           CD_NM_ENG,
+           CD_DESC,
+           SORT_SEQ,
+           USE_YN,
+           ATTR1,
+           ATTR2,
+           ATTR3,
+           ATTR4,
+           ATTR5,
+           INPT_DT,
+           INPT_ID,
+           INPT_IP,
+           UPDT_DT,
+           UPDT_ID,
+           UPDT_IP,
+           ATTR6,
+           ATTR7,
+           ATTR8,
+           ATTR9,
+           ATTR10
+      FROM TB_CD_DETAIL
+     WHERE MAST_CD = #{mastCd} 
+       AND DETL_CD  LIKE '%' || #{detlCd} || '%'
+	   AND NVL(ATTR1, '1')  LIKE DECODE(#{attr1}, NULL, '%', #{attr1})
+	   AND NVL(ATTR2, '1')  LIKE DECODE(#{attr2}, NULL, '%', #{attr2})
+	   AND NVL(ATTR3, '1')  LIKE DECODE(#{attr3}, NULL, '%', #{attr3})
+	   AND NVL(ATTR4, '1')  LIKE DECODE(#{attr4}, NULL, '%', #{attr4})
+	   AND NVL(ATTR5, '1')  LIKE DECODE(#{attr5}, NULL, '%', #{attr5})	   
+	   AND NVL(ATTR6, '1')  LIKE DECODE(#{attr6}, NULL, '%', #{attr6})
+	   AND NVL(ATTR7, '1')  LIKE DECODE(#{attr7}, NULL, '%', #{attr7})
+	   AND NVL(ATTR8, '1')  LIKE DECODE(#{attr8}, NULL, '%', #{attr8})
+	   AND NVL(ATTR9, '1')  LIKE DECODE(#{attr9}, NULL, '%', #{attr9})
+	   AND NVL(ATTR10, '1')  LIKE DECODE(#{attr10}, NULL, '%', #{attr10})	   
+	   AND USE_YN  = NVL(#{useYn}, USE_YN)
+	  ORDER BY SORT_SEQ
+	</select>
+	
+	
+	<insert id="saveMasterCode_I" parameterType="hashMap">
+		INSERT INTO TB_CD_MASTER 
+		(
+			MAST_CD,
+			CD_NM_KOR,
+			CD_NM_ENG,
+			CD_DESC,
+			USE_YN,
+			INPT_DT,
+			INPT_ID,
+			INPT_IP,
+			UPDT_DT,
+			UPDT_ID,
+			UPDT_IP
+		)
+		VALUES (
+			#{mastCd},
+			#{cdNmKor},
+			#{cdNmEng},
+			#{cdDesc},
+			#{useYn},
+			SYSDATE,
+			#{sysUserId},
+			#{sysUserIp} ,
+			SYSDATE, 
+			#{sysUserId},
+			#{sysUserIp}			
+		)
+	</insert>
+	
+	<update id="saveMasterCode_U" parameterType="hashMap">
+		UPDATE TB_CD_MASTER 
+			SET
+			CD_NM_KOR = NVL(#{cdNmKor}, CD_NM_KOR),
+			CD_NM_ENG = NVL(#{cdNmEng}, CD_NM_ENG), 
+			CD_DESC = NVL(#{cdDesc}, CD_DESC),
+			USE_YN = NVL(#{useYn}, USE_YN),
+			UPDT_DT = SYSDATE ,
+			UPDT_ID = #{sysUserId} ,
+			UPDT_IP = #{sysUserIp} 
+		WHERE MAST_CD = #{mastCd}
+	</update>
+
+	<delete id="saveMasterCode_D" parameterType="hashMap">
+	DELETE FROM TB_CD_MASTER WHERE MAST_CD = #{mastCd} 
+	</delete>
+
+	
+	<insert id="saveDetailCode_I"  parameterType="hashMap" >
+    INSERT INTO TB_CD_DETAIL 
+    (
+    	MAST_CD,
+    	DETL_CD,
+    	CD_NM_KOR,
+    	CD_NM_ENG,
+    	CD_DESC,
+    	SORT_SEQ,
+    	USE_YN,
+    	ATTR1,
+    	ATTR2, 
+    	ATTR3,
+    	ATTR4,
+    	ATTR5,			
+    	ATTR6,
+    	ATTR7,
+    	ATTR8,
+    	ATTR9,
+    	ATTR10,
+    	INPT_DT,
+    	INPT_ID,
+    	INPT_IP, 
+    	UPDT_DT,
+    	UPDT_ID,
+    	UPDT_IP
+    )
+    VALUES 
+    (
+    	#{mastCd},
+    	#{detlCd},
+    	#{cdNmKor},
+    	#{cdNmEng},
+    	#{cdDesc},
+    	#{sortSeq},
+    	#{useYn},
+    	#{attr1},
+    	#{attr2},
+    	#{attr3},
+    	#{attr4},
+    	#{attr5},
+    	#{attr6},
+    	#{attr7},
+    	#{attr8},
+    	#{attr9},
+    	#{attr10},
+    	SYSDATE,
+    	#{sysUserId},
+    	#{sysUserIp},
+    	SYSDATE,
+    	#{sysUserId},
+    	#{sysUserIp}			
+    )
+	</insert>
+	
+	
+	<update id="saveDetailCode_U"  parameterType="hashMap" >
+	UPDATE TB_CD_DETAIL 
+	   SET CD_NM_KOR = NVL(#{cdNmKor}, CD_NM_KOR),
+		   CD_NM_ENG = NVL(#{cdNmEng}, CD_NM_ENG), 
+		   CD_DESC = NVL(#{cdDesc}, CD_DESC),
+		   SORT_SEQ = NVL(#{sortSeq}, SORT_SEQ),
+		   USE_YN = NVL(#{useYn}, USE_YN),
+		   ATTR1 = NVL(#{attr1}, ATTR1),
+		   ATTR2 = NVL(#{attr2}, ATTR2),
+		   ATTR3 = NVL(#{attr3}, ATTR3),
+		   ATTR4 = NVL(#{attr4}, ATTR4),
+		   ATTR5 = NVL(#{attr5}, ATTR5),
+		   ATTR6 = NVL(#{attr6}, ATTR6),
+		   ATTR7 = NVL(#{attr7}, ATTR7),
+		   ATTR8 = NVL(#{attr8}, ATTR8),
+		   ATTR9 = NVL(#{attr9}, ATTR9),
+		   ATTR10 = NVL(#{attr10}, ATTR10),			
+		   UPDT_DT = SYSDATE ,
+		   UPDT_ID = #{sysUserId} ,
+		   UPDT_IP = #{sysUserIp} 
+	 WHERE MAST_CD = #{mastCd} AND DETL_CD = #{detlCd}
+	</update>
+	
+	
+	<delete id="saveDetailCode_D"  parameterType="hashMap" >
+	DELETE FROM TB_CD_DETAIL WHERE MAST_CD = #{mastCd} AND DETL_CD = #{detlCd}
+	</delete>
+	
+	<select id="searchERPCodeDEPT" parameterType="hashMap" resultMap="detailMap">
+    SELECT 'DEPT' AS MAST_CD,
+           BUSEO_CODE AS DETL_CD,
+           BUSEOMYEONG AS CD_NM_KOR,
+           BUSEO_CODE AS ATTR1
+      FROM KOSCO.BPAA020
+     WHERE CURRENT_YN = 'Y'
+     <!-- 
+       AND BUSEO_CODE IN ('05710','01400','01300','01700')
+        -->
+       <if test='searchTxt != null and searchTxt !=""'>
+       AND (BUSEO_CODE LIKE '%' || #{searchTxt} || '%' OR BUSEOMYEONG LIKE '%'|| #{searchTxt} || '%' )
+       </if>
+  ORDER BY BUSEOMYEONG
+	</select>
+	
+	<select id="searchERPCodeProdScrap" parameterType="hashMap" resultMap="detailMap">
+    SELECT 'PROD_SCRAP' AS MAST_CD,
+           PROD_CD AS DETL_CD,
+           NM      AS CD_NM_KOR,
+	       PROD_CD AS ATTR1
+      FROM KOSCO.BBAT022
+     WHERE USE_YN = 'Y'
+     <if test='searchTxt != null and searchTxt != ""'>
+       AND (PROD_CD LIKE '%'|| NVL(#{searchTxt}, '') ||'%'  OR NM LIKE '%'|| NVL(#{searchTxt}, '') ||'%') 
+     </if>
+	</select>
+	
+    <select id="searchERPCodeProdType" parameterType="hashMap" resultMap="detailMap">
+        <choose>
+            <when test='detlCd == "1"'>
+            SELECT 'CATEGORY1' AS MAST_CD
+                  ,REF_2       AS DETL_CD
+                  ,CODE_NAME   AS CD_NM_KOR
+                  ,REF_2       AS ATTR1
+              FROM KOSCO.BCOD011
+             WHERE GUBUN = 'H002'
+               AND USE_GUBUN = '1'
+               AND REF_1 = '1'
+               <if test='searchTxt != null and searchTxt != ""'>
+               AND (REF_2 LIKE '%'|| #{searchTxt} ||'%' OR CODE_NAME LIKE '%'|| #{searchTxt} ||'%')
+               </if> 
+          ORDER BY REF_2
+            </when>
+            <when test='detlCd == "2"'>
+            SELECT 'CATEGORY2' AS MAST_CD
+			      ,''          AS DETL_CD
+                  ,CODE_NAME   AS CD_NM_KOR
+                  ,CODE        AS ATTR1
+              FROM KOSCO.BCOD011
+             WHERE GUBUN = 'H002'
+               AND USE_GUBUN = '1'
+               AND REF_1 = '2'
+               <if test='searchTxt != null and searchTxt != ""'>
+               AND CODE_NAME LIKE '%'|| #{searchTxt} ||'%'
+               </if> 
+            </when>
+            <when test='detlCd == "3"'>
+            SELECT 'CATEGORY3' AS MAST_CD
+                  ,''          AS DETL_CD 
+                  ,CODE_NAME   AS CD_NM_KOR
+                  ,''          AS ATTR1
+              FROM KOSCO.BCOD011
+             WHERE GUBUN = 'H002'
+               AND USE_GUBUN = '1'
+               AND REF_1 = '3'
+               <if test='searchTxt != null and searchTxt != ""'>
+               AND CODE_NAME LIKE '%'|| #{searchTxt} ||'%'
+               </if> 
+            </when>
+            <when test='detlCd == "4"'>
+            SELECT 'CATEGORY4' AS MAST_CD
+                   ,''         AS DETL_CD
+                   ,NM         AS CD_NM_KOR
+                   ,''         AS ATTR1
+              FROM (
+                SELECT NM
+                  FROM KOSCO.BBAT023
+                 WHERE NVL(USE_YN,'-')   LIKE 'Y'
+                   AND GB                IN ('4','5','6')
+                   AND BEACHA = 'Y'
+            
+                UNION ALL
+            
+                SELECT CODE_NAME
+                  FROM KOSCO.BCOD011
+                 WHERE GUBUN = 'H002'
+                   AND USE_GUBUN = '1'
+                   AND REF_1 = '4'
+                   ) T
+             <where>
+               <if test='searchTxt != null and searchTxt != ""'>
+               AND NM LIKE '%' || #{searchTxt} || '%'
+               </if>
+             </where> 
+             ORDER BY NM
+            </when>
+            <when test='detlCd == "5"'>
+            SELECT 'CATEGORY5' AS MAST_CD
+                  ,''          AS DETL_CD
+                  ,CODE_NAME   AS CD_NM_KOR
+                  ,''          AS ATTR1
+              FROM KOSCO.BCOD011
+             WHERE GUBUN = 'H002'
+               AND USE_GUBUN = '1'
+               AND REF_1 = '5'
+               <if test='searchTxt != null and searchTxt != ""'>
+               AND CODE_NAME LIKE '%'|| #{searchTxt} ||'%'
+               </if>
+            </when>
+            <otherwise>
+            SELECT 'CATEGORY1' AS MAST_CD
+                  ,REF_2       AS DETL_CD
+                  ,CODE_NAME   AS CD_NM_KOR
+                  ,REF_2       AS ATTR1
+              FROM KOSCO.BCOD011
+             WHERE GUBUN = 'H002'
+               AND USE_GUBUN = '1'
+               AND REF_1 = '1'
+               <if test='searchTxt != null and searchTxt != ""'>
+               AND (REF_2 LIKE '%'|| #{searchTxt} ||'%' OR CODE_NAME LIKE '%'|| #{searchTxt} ||'%')
+               </if> 
+            
+            UNION
+            
+            SELECT 'CATEGORY2' AS MAST_CD
+			      ,''          AS DETL_CD
+                  ,CODE_NAME   AS CD_NM_KOR
+                  ,CODE        AS ATTR1
+              FROM KOSCO.BCOD011
+             WHERE GUBUN = 'H002'
+               AND USE_GUBUN = '1'
+               AND REF_1 = '2'
+               <if test='searchTxt != null and searchTxt != ""'>
+               AND CODE_NAME LIKE '%'|| #{searchTxt} ||'%'
+               </if> 
+            
+            UNION
+            
+            SELECT 'CATEGORY3' AS MAST_CD
+                  ,''          AS DETL_CD 
+                  ,CODE_NAME   AS CD_NM_KOR
+                  ,''          AS ATTR1
+              FROM KOSCO.BCOD011
+             WHERE GUBUN = 'H002'
+               AND USE_GUBUN = '1'
+               AND REF_1 = '3'
+               <if test='searchTxt != null and searchTxt != ""'>
+               AND CODE_NAME LIKE '%'|| #{searchTxt} ||'%'
+               </if> 
+            
+            UNION
+            
+            SELECT 'CATEGORY4' AS MAST_CD
+                   ,''         AS DETL_CD
+                   ,NM         AS CD_NM_KOR
+                   ,''         AS ATTR1
+              FROM (
+                SELECT NM
+                  FROM KOSCO.BBAT023
+                 WHERE NVL(USE_YN,'-')   LIKE 'Y'
+                   AND GB                IN ('4','5','6')
+                   AND BEACHA = 'Y'
+            
+                UNION ALL
+            
+                SELECT CODE
+                  FROM KOSCO.BCOD011
+                 WHERE GUBUN = 'H002'
+                   AND USE_GUBUN = '1'
+                   AND REF_1 = '4'
+                   )
+               <where>
+               <if test='searchTxt != null and searchTxt != ""'>
+               AND NM LIKE '%'|| #{searchTxt} ||'%'
+               </if> 
+               </where>
+            
+            UNION
+            
+            SELECT 'CATEGORY5' AS MAST_CD
+                  ,''          AS DETL_CD
+                  ,CODE_NAME   AS CD_NM_KOR
+                  ,''          AS ATTR1
+              FROM KOSCO.BCOD011
+             WHERE GUBUN = 'H002'
+               AND USE_GUBUN = '1'
+               AND REF_1 = '5'
+               <if test='searchTxt != null and searchTxt != ""'>
+               AND CODE_NAME LIKE '%'|| #{searchTxt} ||'%'
+               </if>
+            </otherwise>
+        </choose>
+        </select>
+	
+	<select id="searchERPCodeProdExceptScrap" parameterType="hashMap" resultMap="detailMap">
+    SELECT 'PROD_NA_SCRAP' AS MAST_CD,
+           PROD_CD AS DETL_CD,
+           NM      AS CD_NM_KOR,
+	       PROD_CD AS ATTR1
+      FROM KOSCO.BBAT023
+     WHERE USE_YN = 'Y'
+       AND GB IN (4,5,6)
+       AND BEACHA IS NOT NULL
+       <if test='searchTxt != null and searchTxt != ""'>
+       AND BEACHA = #{searchTxt}
+       </if>
+	</select>
+	
+	<select id="searchERPCodeWgtLoss" parameterType="hashMap" resultMap="detailMap">
+    SELECT GUBUN AS MAST_CD,
+           CODE AS DETL_CD,
+           CODE_NAME AS CD_NM_KOR,
+           CODE AS ATTR1,
+           REF_1 AS ATTR2,
+           REF_2 AS ATTR3
+      FROM KOSCO.BCOD011
+     WHERE GUBUN = 'A005'
+       AND CODE <![CDATA[<>]]> '0'
+       AND USE_GUBUN <![CDATA[<>]]> '0'
+	</select>
+	
+	<select id="searchERPCode" parameterType="hashMap" resultMap="detailMap">
+    SELECT 
+           GUBUN AS MAST_CD,
+           CODE AS DETL_CD,
+           CODE_NAME AS CD_NM_KOR,
+           SYSTEM AS ATTR1,
+           REF_1 AS ATTR2,
+           REF_2 AS ATTR3,
+           REF_3 AS ATTR4,
+           REF_4 AS ATTR5,
+           REF_5 AS ATTR6,
+           '' AS ARRT7,
+           '' AS ARRT8,
+           '' AS ARRT9,
+           '' AS ARRT10
+      FROM KOSCO.BCOD011
+     WHERE USE_GUBUN <![CDATA[<>]]> '0'
+       AND GUBUN = #{mastCd}
+       AND CODE <![CDATA[<>]]> '0'
+	</select>
+	
+	<select id="searchAreaList" parameterType="hashMap" resultMap="detailMap">
+    SELECT 'AREA' AS MAST_CD,
+           B.AREA_CD AS DETL_CD,
+           A.CODE_NAME||' '||B.AREA_NM AS CD_NM_KOR,
+           B.AREA_CD AS ATTR1
+      FROM (SELECT CODE,CODE_NAME
+              FROM KOSCO.BCOD011
+             WHERE GUBUN = '4062'
+               AND USE_GUBUN = '1') A,
+           (SELECT AREA_CD,
+                   AREA_NM,
+                   AREA_GB
+              FROM KOSCO.BSAT020
+             WHERE USE_YN = 'Y'
+               AND AREA_CD NOT IN ('F13','I43','K25','K24','H47','H46','B14','B11','B13','N47','H49','H41','N48','C12','C13','H42','H45','H50','I40','I41','I42','H51','N46')
+           ) B
+     WHERE A.CODE = B.AREA_GB
+       AND (A.CODE_NAME LIKE '%' || #{searchTxt} || '%' OR B.AREA_CD LIKE '%'|| #{searchTxt} || '%' OR B.AREA_NM LIKE '%'|| #{searchTxt} ||'%' OR (CODE_NAME||' '||B.AREA_NM) LIKE '%' || #{searchTxt} || '%')
+  ORDER BY AREA_CD
+	</select>
+	
+	<select id="searchERPCodeScrapGrade" parameterType="hashMap" resultMap="detailMap">
+	SELECT 'SCRAP_GRADE' AS MAST_CD,
+	       CODE_NAME AS CD_NM_KOR,
+	       CODE_NAME AS DETL_CD,
+	       CODE_NAME AS ATTR1
+	  FROM (
+            SELECT DISTINCT CODE_NAME
+              FROM KOSCO.BCOD011
+             WHERE GUBUN = '0906'
+               AND USE_GUBUN = '1'
+           )        
+ ORDER BY CODE_NAME
+	</select>
+	
+	<select id="searchCar" parameterType="hashMap" resultMap="detailMap">
+    SELECT A.CUST_CD,
+           A.CAR_FULL_NO,
+           A.CAR_NO,
+           A.DRV_NM,
+           A.DRV_TEL,
+           B.CUST_NM,
+           B.CUST_NM1
+      FROM STL1B2B.E_CAR A
+ LEFT JOIN KOSCO.BBAT041 B
+        ON A.CUST_CD = B.CUST_CD
+     WHERE A.USE_YN = 'Y'
+     <if test='searchTxt != null and searchTxt != ""'>
+       AND CAR_FULL_NO LIKE '%'||#{searchTxt}||'%'
+     </if>
+	</select>
+	
+	<resultMap id="wgtReduceMap" type="egovMap" />
+	<select id="searchWgtReduce" parameterType="hashMap" resultMap="wgtReduceMap">
+    SELECT *
+      FROM (
+        SELECT A.REDUCE_CD || A.CUST_CD AS SEL_KEY
+              ,A.REDUCE_CD
+              ,A.CUST_CD
+              ,A.UNIT_WEIGHT
+              ,A.REDUCE_DESC
+              ,'전체' AS CUST_NM 
+          FROM REDUCE_CD_DETAIL A
+         WHERE A.CUST_CD = 'ALL'
+     
+     UNION
+     
+        SELECT A.REDUCE_CD || A.CUST_CD AS SEL_KEY
+              ,A.REDUCE_CD
+              ,A.CUST_CD
+              ,A.UNIT_WEIGHT
+              ,A.REDUCE_DESC
+              ,CASE WHEN A.CUST_CD = 'ALL' THEN '전체'
+                    WHEN B.CUST_CD IS NOT NULL THEN B.CUST_NM
+                    ELSE ''
+               END AS CUST_NM 
+          FROM WSSDBO.REDUCE_CD_DETAIL A
+     LEFT JOIN KOSCO.BBAT041 B
+            ON A.CUST_CD = B.CUST_CD 
+         WHERE A.CUST_CD <![CDATA[<>]]> 'ALL'
+            <if test='custCd != null and custCd != ""'>
+            AND A.CUST_CD = #{custCd}
+            </if>
+            <if test='custNm != null and custNm != ""'>
+            AND B.CUST_NM = #{custNm}
+            </if>
+            <!-- 
+            <if test='prodNm != null and prodNm != ""'>
+            AND A.PROD_CD = #{prodNm}
+            </if>
+             -->
+        ) T
+     ORDER BY T.REDUCE_CD
+	</select>
+	
+	<resultMap id="salesMap" type="egovMap" />
+	<select id="searchSales" parameterType="hashMap" resultMap="salesMap">
+	SELECT *
+	  FROM (
+              SELECT SG,
+                     DECODE(SG,'1','사상','3','녹산','4','칠서') SG_NM, /*사업장*/
+                     DT AS SAL_DT,/*일자*/
+                     JNO AS SAL_JNO,/*전표*/
+                     CUST_CD,/*거래처*/
+                     (SELECT cust_nm
+                        FROM kosco.bbat041 b
+                       WHERE b.cust_cd = a.cust_cd) cust_nm,/*상호*/
+                     CAR_NO,/*차량번호*/
+                     SEND_CD,
+                     (SELECT send_nm
+                        FROM kosco.bsat021 c
+                       WHERE c.send_cd = a.send_cd) send_nm,/*직송처*/
+                       SUBSTRB(KOSCO.FN_PROD_NM(a.PROD_CD),1,40) PROD_NM/*품명*/,
+                          (SELECT CODE_NAME
+                         FROM KOSCO.BCOD011
+                        WHERE GUBUN = '0903'
+                          AND CODE <![CDATA[<>]]> '0'
+                          AND USE_GUBUN <![CDATA[<>]]> '0'
+                          AND CODE = SUBSTR(PROD_CD,4,3)) PROD_CS, /*재질*/
+                     SUBSTR(PROD_CD,7)PROD_GG, /*규격*/
+                       PROD_CD,
+                       BD_QTY,/*BD*/
+                       PS_QTY,/*PS*/
+                       WGT,/*중량*/
+                       RMK/*비고*/
+                FROM KOSCO.BSCT010 a
+               WHERE 1 = 1
+                 AND SG = '3'
+                 AND SUBSTR(PROD_CD,2,2) = 'ER'
+                 AND DT BETWEEN REPLACE(#{fromDt}, '-') AND REPLACE(#{toDt}, '-')
+                 AND OT_GB <![CDATA[<>]]> '1'
+                 ORDER BY DT,JNO
+           ) T
+    <where>
+        <if test='jno != null and jno != ""'>
+        AND T.SAL_JNO LIKE '%' || #{jno} || '%'
+        </if>
+        <if test='custSearchTxt != null and custSearchTxt != ""'>
+        AND T.CUST_CD LIKE '%'|| #{custSearchTxt} || '%' OR T.CUST_NM LIKE '%' || #{custSearchTxt} || '%'
+        </if> 
+    </where>
+	</select>
+</mapper>

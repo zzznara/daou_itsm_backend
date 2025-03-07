@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- 
+ * 공통코드 관리 iBatis SqlMap으로서 작용한다.
+ * @Company : DONGYEN S&t, Ltd.
+ * @Copyright : Copyright (C) by DONGYEN S&t All rights reserved.
+ * @Author : 류승우
+ * @Create : 2022년 03월 14일
+  -->
+<mapper namespace="resultinquery.usehistory">
+
+    <resultMap id="usehistoryMap" type="egovMap" />
+    <select id="searchUseHistoryList"  parameterType="hashMap" resultMap="usehistoryMap">
+
+        SELECT A.LOG_SEQ ,
+		       A.USER_ID ,
+		       B.NM_KOR ,
+		       A.MENU_ID ,
+		       C.MENU_NM_KOR ,
+		       A.USE_HIS_CNTN ,
+		       TO_CHAR(A.INPT_DT, 'YYYY-MM-DD') INPT_DT 
+		  FROM TB_USER_LOG A
+		  LEFT JOIN TB_USER B ON A.USER_ID = B.USER_ID 
+		  LEFT JOIN TB_MENU C ON A.MENU_ID = C.MENU_ID 
+		 WHERE A.USER_ID LIKE '%' || #{userId} || '%'
+		   AND A.USE_HIS_CNTN LIKE '%' || #{useHisCntn} || '%'
+		   AND TO_CHAR(A.INPT_DT, 'YYYY-MM-DD')  BETWEEN  #{startDt} AND #{endDt}
+		   
+		 ORDER BY LOG_SEQ, USER_ID
+    </select>    
+    
+
+</mapper>

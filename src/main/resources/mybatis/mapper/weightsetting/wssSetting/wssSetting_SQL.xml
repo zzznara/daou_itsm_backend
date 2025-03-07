@@ -1,0 +1,417 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+<!-- 
+ * 공통코드 관리 iBatis SqlMap으로서 작용한다.
+ * @Company : DONGYEN S&t, Ltd.
+ * @Copyright : Copyright (C) by DONGYEN S&t All rights reserved.
+ * @Author : 전현우
+ * @Create : 2024년 09월 19일
+  -->
+<mapper namespace="weightsetting.wssSetting">
+
+    <resultMap id="settingMap" type="egovMap" />
+    <select id="SearchCommonSettings" parameterType="hashMap" resultMap="settingMap">
+    SELECT SET_CD
+          ,SET_VAL
+          ,SET_DESC
+          ,WBRG_CD
+          ,ATTR1
+          ,ATTR2
+          ,ATTR3
+          ,ATTR4
+          ,ATTR5
+          ,ATTR6
+          ,ATTR7
+          ,ATTR8
+          ,ATTR9
+          ,ATTR10
+          ,ATTR11
+          ,ATTR12
+          ,ATTR13
+          ,ATTR14
+          ,ATTR15
+          ,ATTR16
+          ,ATTR17
+          ,ATTR18
+          ,ATTR19
+          ,ATTR20
+          ,INPT_DT
+          ,INPT_ID
+          ,INPT_IP
+          ,UPDT_DT
+          ,UPDT_ID
+          ,UPDT_IP
+      FROM TB_CD_WSS_SET
+     WHERE SET_CD IN ('5MIN_IN_SKIP', 'DUP_SKIP', 'LIMIT_DT_APPLY' ,'REBAR_MARGIN_APPLY' ,'BILLET_MARGIN_APPLY', 'LIMIT_DIRECTION_APPLY')
+    </select>
+    
+    <select id="SearchWeighbridgeDirection" parameterType="hashMap" resultMap="settingMap">
+    SELECT SET_CD
+          ,SET_VAL
+          ,SET_DESC
+          ,WBRG_CD
+          ,ATTR1
+          ,ATTR2
+          ,ATTR3
+          ,ATTR4
+          ,ATTR5
+          ,ATTR6
+          ,ATTR7
+          ,ATTR8
+          ,ATTR9
+          ,ATTR10
+          ,ATTR11
+          ,ATTR12
+          ,ATTR13
+          ,ATTR14
+          ,ATTR15
+          ,ATTR16
+          ,ATTR17
+          ,ATTR18
+          ,ATTR19
+          ,ATTR20
+          ,INPT_DT
+          ,INPT_ID
+          ,INPT_IP
+          ,UPDT_DT
+          ,UPDT_ID
+          ,UPDT_IP
+      FROM TB_CD_WSS_SET
+     WHERE SET_CD IN ('WBRG_14001010_IN' ,'WBRG_14001010_OUT' ,'WBRG_14001020_IN' ,'WBRG_14001020_OUT' ,'WBRG_14002010_IN' ,'WBRG_14002010_OUT' ,'WBRG_14002020_IN' ,'WBRG_14002020_OUT')
+    </select>
+    
+    <select id="SearchWeightBrigdeErrRangeSetting" parameterType="hashMap" resultMap="settingMap">
+    SELECT SET_CD
+          ,SET_VAL
+          ,SET_DESC
+          ,WBRG_CD
+          ,ATTR1
+          ,ATTR2
+          ,ATTR3
+          ,ATTR4
+          ,ATTR5
+          ,ATTR6
+          ,ATTR7
+          ,ATTR8
+          ,ATTR9
+          ,ATTR10
+          ,ATTR11
+          ,ATTR12
+          ,ATTR13
+          ,ATTR14
+          ,ATTR15
+          ,ATTR16
+          ,ATTR17
+          ,ATTR18
+          ,ATTR19
+          ,ATTR20
+          ,INPT_DT
+          ,INPT_ID
+          ,INPT_IP
+          ,UPDT_DT
+          ,UPDT_ID
+          ,UPDT_IP
+      FROM TB_CD_WSS_SET
+     WHERE SET_CD IN ('REBAR_1013_MAX_PERCENT' ,'REBAR_1625_MAX_PERCENT' ,'REBAR_2932_MAX_PERCENT' ,'REBAR_1013_MIN_PERCENT' ,'REBAR_1625_MIN_PERCENT' ,'REBAR_2932_MIN_PERCENT' ,'REBAR_RAIL_MAX_PERCENT' ,'REBAR_RAIL_MIN_PERCENT' ,'REBAR_ETC_MAX_PERCENT' ,'REBAR_ETC_MIN_PERCENT')
+    </select>
+    
+    <select id="SearchWeightBrigdeBilletAllowErrRangeSetting" parameterType="hashMap" resultMap="settingMap">
+    SELECT SET_CD
+          ,SET_VAL
+          ,SET_DESC
+          ,WBRG_CD
+          ,ATTR1
+          ,ATTR2
+          ,ATTR3
+          ,ATTR4
+          ,ATTR5
+          ,ATTR6
+          ,ATTR7
+          ,ATTR8
+          ,ATTR9
+          ,ATTR10
+          ,ATTR11
+          ,ATTR12
+          ,ATTR13
+          ,ATTR14
+          ,ATTR15
+          ,ATTR16
+          ,ATTR17
+          ,ATTR18
+          ,ATTR19
+          ,ATTR20
+          ,INPT_DT
+          ,INPT_ID
+          ,INPT_IP
+          ,UPDT_DT
+          ,UPDT_ID
+          ,UPDT_IP
+      FROM WSSDBO.TB_CD_WSS_SET
+     WHERE SET_CD IN ('BILLET_14001010_MAX_KG', 'BILLET_14001010_MIN_KG', 'BILLET_14001020_MAX_KG', 'BILLET_14001020_MIN_KG', 'BILLET_14002010_MAX_KG', 'BILLET_14002010_MIN_KG', 'BILLET_14002020_MAX_KG', 'BILLET_14002020_MIN_KG')
+    </select>
+    
+    <update id="saveSingleSetting">
+    UPDATE WSSDBO.TB_CD_WSS_SET
+       SET SET_VAL = #{setVal}
+          ,UPDT_DT = sysdate
+          ,UPDT_ID = #{sysUserId}
+          ,UPDT_IP = #{sysUserIp}
+     WHERE SET_CD = #{setCd}
+    </update>
+    
+    <update id="saveCommonSettings">
+    BEGIN
+    UPDATE WSSDBO.TB_CD_WSS_SET
+       SET SET_VAL = #{fiveMinInSkip}
+          ,UPDT_DT = sysdate
+          ,UPDT_ID = #{sysUserId}
+          ,UPDT_IP = #{sysUserIp}
+     WHERE SET_CD = '5MIN_IN_SKIP';
+     
+    UPDATE WSSDBO.TB_CD_WSS_SET
+       SET SET_VAL = #{dupSkip}
+          ,UPDT_DT = sysdate
+          ,UPDT_ID = #{sysUserId}
+          ,UPDT_IP = #{sysUserIp}
+     WHERE SET_CD = 'DUP_SKIP';
+
+    UPDATE WSSDBO.TB_CD_WSS_SET
+       SET SET_VAL = #{limitDtApply}
+          ,UPDT_DT = sysdate
+          ,UPDT_ID = #{sysUserId}
+          ,UPDT_IP = #{sysUserIp}
+     WHERE SET_CD = 'LIMIT_DT_APPLY';
+
+    UPDATE WSSDBO.TB_CD_WSS_SET
+       SET SET_VAL = #{rebarMarginApply}
+          ,UPDT_DT = sysdate
+          ,UPDT_ID = #{sysUserId}
+          ,UPDT_IP = #{sysUserIp}
+     WHERE SET_CD = 'REBAR_MARGIN_APPLY';
+
+    UPDATE WSSDBO.TB_CD_WSS_SET
+       SET SET_VAL = #{billetMarginApply}
+          ,UPDT_DT = sysdate
+          ,UPDT_ID = #{sysUserId}
+          ,UPDT_IP = #{sysUserIp}
+     WHERE SET_CD = 'BILLET_MARGIN_APPLY';
+
+    UPDATE WSSDBO.TB_CD_WSS_SET
+       SET SET_VAL = #{limitDirectionApply}
+          ,UPDT_DT = sysdate
+          ,UPDT_ID = #{sysUserId}
+          ,UPDT_IP = #{sysUserIp}
+     WHERE SET_CD = 'LIMIT_DIRECTION_APPLY';
+
+    END
+    </update>
+    
+    <update id="saveWeighbridgeDirection">
+    BEGIN
+    <if test='wbrg14001010In != null and wbrg14001010In != ""'>
+    UPDATE WSSDBO.TB_CD_WSS_SET
+       SET SET_VAL = #{wbrg14001010In}
+          ,UPDT_DT = sysdate
+          ,UPDT_ID = #{sysUserId}
+          ,UPDT_IP = #{sysUserIp}
+     WHERE SET_CD = 'WBRG_14001010_IN';
+    </if>
+    <if test='wbrg14001010Out != null and wbrg14001010Out != ""'>
+    UPDATE WSSDBO.TB_CD_WSS_SET
+       SET SET_VAL = #{wbrg14001010Out}
+          ,UPDT_DT = sysdate
+          ,UPDT_ID = #{sysUserId}
+          ,UPDT_IP = #{sysUserIp}
+     WHERE SET_CD = 'WBRG_14001010_OUT';
+    </if>
+    <if test='wbrg14001020In != null and wbrg14001020In != ""'>
+    UPDATE WSSDBO.TB_CD_WSS_SET
+       SET SET_VAL = #{wbrg14001020In}
+          ,UPDT_DT = sysdate
+          ,UPDT_ID = #{sysUserId}
+          ,UPDT_IP = #{sysUserIp}
+     WHERE SET_CD = 'WBRG_14001020_IN';
+    </if>
+    <if test='wbrg14001020Out != null and wbrg14001020Out != ""'>
+    UPDATE WSSDBO.TB_CD_WSS_SET
+       SET SET_VAL = #{wbrg14001020Out}
+          ,UPDT_DT = sysdate
+          ,UPDT_ID = #{sysUserId}
+          ,UPDT_IP = #{sysUserIp}
+     WHERE SET_CD = 'WBRG_14001020_OUT';
+    </if>
+    <if test='wbrg14002010In != null and wbrg14002010In != ""'>
+    UPDATE WSSDBO.TB_CD_WSS_SET
+       SET SET_VAL = #{wbrg14002010In}
+          ,UPDT_DT = sysdate
+          ,UPDT_ID = #{sysUserId}
+          ,UPDT_IP = #{sysUserIp}
+     WHERE SET_CD = 'WBRG_14002010_IN';
+    </if>
+    <if test='wbrg14002010Out != null and wbrg14002010Out != ""'>
+    UPDATE WSSDBO.TB_CD_WSS_SET
+       SET SET_VAL = #{wbrg14002010Out}
+          ,UPDT_DT = sysdate
+          ,UPDT_ID = #{sysUserId}
+          ,UPDT_IP = #{sysUserIp}
+     WHERE SET_CD = 'WBRG_14002010_OUT';
+    </if>
+    <if test='wbrg14002020In != null and wbrg14002020In != ""'>
+    UPDATE WSSDBO.TB_CD_WSS_SET
+       SET SET_VAL = #{wbrg14002020In}
+          ,UPDT_DT = sysdate
+          ,UPDT_ID = #{sysUserId}
+          ,UPDT_IP = #{sysUserIp}
+     WHERE SET_CD = 'WBRG_14002020_IN';
+    </if>
+    <if test='wbrg14002020Out != null and wbrg14002020Out != ""'>
+    UPDATE WSSDBO.TB_CD_WSS_SET
+       SET SET_VAL = #{wbrg14002020Out}
+          ,UPDT_DT = sysdate
+          ,UPDT_ID = #{sysUserId}
+          ,UPDT_IP = #{sysUserIp}
+     WHERE SET_CD = 'WBRG_14002020_OUT';
+    </if>
+    END
+    </update>
+    
+    <update id="saveWeightBrigdeAllowErrRangeSetting">
+    BEGIN
+
+    UPDATE WSSDBO.TB_CD_WSS_SET
+       SET SET_VAL = #{rebar1013MaxPercent}
+          ,UPDT_DT = sysdate
+          ,UPDT_ID = #{sysUserId}
+          ,UPDT_IP = #{sysUserIp}
+     WHERE SET_CD = 'REBAR_1013_MAX_PERCENT';
+
+    UPDATE WSSDBO.TB_CD_WSS_SET
+       SET SET_VAL = #{rebar1625MaxPercent}
+          ,UPDT_DT = sysdate
+          ,UPDT_ID = #{sysUserId}
+          ,UPDT_IP = #{sysUserIp}
+     WHERE SET_CD = 'REBAR_1625_MAX_PERCENT';
+
+    UPDATE WSSDBO.TB_CD_WSS_SET
+       SET SET_VAL = #{rebar2932MaxPercent}
+          ,UPDT_DT = sysdate
+          ,UPDT_ID = #{sysUserId}
+          ,UPDT_IP = #{sysUserIp}
+     WHERE SET_CD = 'REBAR_2932_MAX_PERCENT';
+
+    UPDATE WSSDBO.TB_CD_WSS_SET
+       SET SET_VAL = #{rebar1013MinPercent}
+          ,UPDT_DT = sysdate
+          ,UPDT_ID = #{sysUserId}
+          ,UPDT_IP = #{sysUserIp}
+     WHERE SET_CD = 'REBAR_1013_MIN_PERCENT';
+
+    UPDATE WSSDBO.TB_CD_WSS_SET
+       SET SET_VAL = #{rebar1625MinPercent}
+          ,UPDT_DT = sysdate
+          ,UPDT_ID = #{sysUserId}
+          ,UPDT_IP = #{sysUserIp}
+     WHERE SET_CD = 'REBAR_1625_MIN_PERCENT';
+
+    UPDATE WSSDBO.TB_CD_WSS_SET
+       SET SET_VAL = #{rebar2932MinPercent}
+          ,UPDT_DT = sysdate
+          ,UPDT_ID = #{sysUserId}
+          ,UPDT_IP = #{sysUserIp}
+     WHERE SET_CD = 'REBAR_2932_MIN_PERCENT';
+
+    UPDATE WSSDBO.TB_CD_WSS_SET
+       SET SET_VAL = #{rebarRailMaxPercent}
+          ,UPDT_DT = sysdate
+          ,UPDT_ID = #{sysUserId}
+          ,UPDT_IP = #{sysUserIp}
+     WHERE SET_CD = 'REBAR_RAIL_MAX_PERCENT';
+
+    UPDATE WSSDBO.TB_CD_WSS_SET
+       SET SET_VAL = #{rebarRailMinPercent}
+          ,UPDT_DT = sysdate
+          ,UPDT_ID = #{sysUserId}
+          ,UPDT_IP = #{sysUserIp}
+     WHERE SET_CD = 'REBAR_RAIL_MIN_PERCENT';
+
+    UPDATE WSSDBO.TB_CD_WSS_SET
+       SET SET_VAL = #{rebarEtcMaxPercent}
+          ,UPDT_DT = sysdate
+          ,UPDT_ID = #{sysUserId}
+          ,UPDT_IP = #{sysUserIp}
+     WHERE SET_CD = 'REBAR_ETC_MAX_PERCENT';
+
+    UPDATE WSSDBO.TB_CD_WSS_SET
+       SET SET_VAL = #{rebarEtcMinPercent}
+          ,UPDT_DT = sysdate
+          ,UPDT_ID = #{sysUserId}
+          ,UPDT_IP = #{sysUserIp}
+     WHERE SET_CD = 'REBAR_ETC_MIN_PERCENT';
+
+    END;
+    </update>
+    
+    <update id="saveWeightBrigdeBilletAllowErrRangeSetting">
+    BEGIN
+
+    UPDATE WSSDBO.TB_CD_WSS_SET
+       SET SET_VAL = #{billet14001010MaxKg}
+          ,UPDT_DT = sysdate
+          ,UPDT_ID = #{sysUserId}
+          ,UPDT_IP = #{sysUserIp}
+     WHERE SET_CD = 'BILLET_14001010_MAX_KG';
+     
+    UPDATE WSSDBO.TB_CD_WSS_SET
+       SET SET_VAL = #{billet14001010MinKg}
+          ,UPDT_DT = sysdate
+          ,UPDT_ID = #{sysUserId}
+          ,UPDT_IP = #{sysUserIp}
+     WHERE SET_CD = 'BILLET_14001010_MIN_KG';
+
+    UPDATE WSSDBO.TB_CD_WSS_SET
+       SET SET_VAL = #{billet14001020MaxKg}
+          ,UPDT_DT = sysdate
+          ,UPDT_ID = #{sysUserId}
+          ,UPDT_IP = #{sysUserIp}
+     WHERE SET_CD = 'BILLET_14001020_MAX_KG';
+
+    UPDATE WSSDBO.TB_CD_WSS_SET
+       SET SET_VAL = #{billet14001020MinKg}
+          ,UPDT_DT = sysdate
+          ,UPDT_ID = #{sysUserId}
+          ,UPDT_IP = #{sysUserIp}
+     WHERE SET_CD = 'BILLET_14001020_MIN_KG';
+
+    UPDATE WSSDBO.TB_CD_WSS_SET
+       SET SET_VAL = #{billet14002010MaxKg}
+          ,UPDT_DT = sysdate
+          ,UPDT_ID = #{sysUserId}
+          ,UPDT_IP = #{sysUserIp}
+     WHERE SET_CD = 'BILLET_14002010_MAX_KG';
+
+    UPDATE WSSDBO.TB_CD_WSS_SET
+       SET SET_VAL = #{billet14002010MinKg}
+          ,UPDT_DT = sysdate
+          ,UPDT_ID = #{sysUserId}
+          ,UPDT_IP = #{sysUserIp}
+     WHERE SET_CD = 'BILLET_14002010_MIN_KG';
+
+    UPDATE WSSDBO.TB_CD_WSS_SET
+       SET SET_VAL = #{billet14002020MaxKg}
+          ,UPDT_DT = sysdate
+          ,UPDT_ID = #{sysUserId}
+          ,UPDT_IP = #{sysUserIp}
+     WHERE SET_CD = 'BILLET_14002020_MAX_KG';
+
+    UPDATE WSSDBO.TB_CD_WSS_SET
+       SET SET_VAL = #{billet14002020MinKg}
+          ,UPDT_DT = sysdate
+          ,UPDT_ID = #{sysUserId}
+          ,UPDT_IP = #{sysUserIp}
+     WHERE SET_CD = 'BILLET_14002020_MIN_KG';
+
+    END;
+    </update>
+
+</mapper>

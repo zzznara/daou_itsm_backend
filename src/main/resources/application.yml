@@ -1,0 +1,77 @@
+# server config
+server:
+  servlet:
+    context-path: /
+    encoding:
+      charset: UTF-8
+  #    session:
+  #      timeout: 1h
+  tomcat:
+    additional-tld-skip-patterns: "*.jar"
+
+spring:
+  mvc:
+    view:
+      prefix: /WEB-INF/jsp/
+      suffix: .jsp
+      converters:
+        preferred-json-mapper: jackson
+  gson:
+    enabled: false
+  thymeleaf:
+    enabled: false
+  messages:
+    basename: classpath:/i18n/message/message,classpath:/i18n/exception/exception
+    encoding: UTF-8
+  output:
+    ansi:
+      enabled: always
+  config:
+    activate:
+      on-profile: ${spring.profiles.active}
+  main:
+    allow-bean-definition-overriding: true
+    allow-circular-references: true
+
+#  session:
+#    store-type: jdbc
+#    jdbc:
+#      initialize-schema: embedded
+#      schema: classpath:org/springframework/session/jdbc/schema-@@platform@@.sql
+#      table-name: SPRING_SESSION
+#    timeout: 1h
+
+jwt:
+  secret: frameworkTms@20234MobiLEoNSERvER@#$%
+  expiration: 86400000
+  header: Authorization
+  prefix: Bearer
+
+# mybatis config
+#mybatis:
+#  mapper-locations: classpath:mybatis/mapper/**/*.xml
+#  type-aliases-package: kr.co.dysnt.framework.**.vo, kr.co.dysnt.framework.**.dto, kr.co.dysnt.framework.**.dao
+#  config-location: classpath:mybatis/config/mybatis-config.xml
+#  configuration:
+#    vfs-impl: org.mybatis.spring.boot.autoconfigure.SpringBootVFS
+#    default-sql-provider-type: kr.co.dysnt.framework.common.bean.RefreshableSqlSessionFactoryBean
+
+# properties for jasypt
+jasypt:
+  encryptor:
+    password: dY$SNt@55o506O#i0t2o1n9s
+    algorithm: PBEWithMD5AndDES
+    bean: jasyptStringEncryptor
+
+crypto:
+  aria:
+    password:
+      algorithm: SHA-256
+    hashed:
+      password: gdyYs/IZqY86VcWhT8emCYfqY1ahw2vtLG+/FzNqtrQ=
+    block:
+      size: 1024
+
+dysntspringboot:
+  license:
+    key: dY$SNt@55o506O#i0t2o1n9s

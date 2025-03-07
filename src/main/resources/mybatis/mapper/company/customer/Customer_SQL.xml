@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- 
+ * 공통코드 관리 iBatis SqlMap으로서 작용한다.
+ * @Company : DONGYEN S&t, Ltd.
+ * @Copyright : Copyright (C) by DONGYEN S&t All rights reserved.
+ * @Author : 전현우
+ * @Create : 2024년 09월 20일
+  -->
+<mapper namespace="company.customer">
+
+	<resultMap id="customerMap" type="egovMap" />	
+	<select id="searchCustomerList"  parameterType="hashMap" resultMap="customerMap">
+	<if test='all != null and all != ""'>
+	SELECT 'ALL' AS CUST_CD,
+	       '전체' AS CUST_NM,
+	       '' AS ENTE_NO,
+	       '' AS CEO_NM,
+	       '' AS ENTE_GB,
+	       '' AS ADDR,
+	       ' ' AS SORT_CD
+	  FROM DUAL
+	
+	
+	UNION
+	</if>
+    SELECT CUST_CD,
+           CUST_NM,
+           SUBSTR(ENTE_NO,0,3) || '-' || SUBSTR(ENTE_NO,4,2) || '-' || SUBSTR(ENTE_NO,6,5) AS ENTE_NO,
+           CEO_NM,
+           DECODE(ENTE_GB ,'1','매입','2','매출','3','매입매출','기타') AS ENTE_GB,
+           ADDR,
+           CUST_NM AS SORT_CD
+      FROM KOSCO.BBAT041
+     WHERE USE_YN = 'Y'
+     <if test='custCd != null and custCd != ""'>
+       AND CUST_CD LIKE '%' || NVL(#{custCd}, '') || '%'
+     </if>
+     <if test='custNm != null and custNm != ""'>
+       AND CUST_NM LIKE '%' || NVL(#{custNm}, '') || '%' 
+     </if>
+     <if test='cust != null and cust != ""'>
+       AND (CUST_CD LIKE '%' || NVL(#{cust}, '') || '%' OR  CUST_NM LIKE '%' || NVL(#{cust}, '') || '%') 
+     </if>
+     ORDER BY SORT_CD
+	</select>
+	
+	<select id="searchMidVendorList" parameterType="hashMap" resultMap="customerMap">
+    SELECT VENDOR_CD, VENDOR_NM
+      FROM KOSCO.BBAT051
+     WHERE USE_YN = 'Y'
+       AND (VENDOR_CD LIKE '%'|| NVL(#{searchTxt}, '') ||'%' OR VENDOR_NM LIKE '%'|| NVL(#{searchTxt}, '') ||'%')
+  ORDER BY VENDOR_NM
+	</select>
+</mapper>
+

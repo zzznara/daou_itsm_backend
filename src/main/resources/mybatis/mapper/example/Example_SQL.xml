@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+ * Example
+ * @Company : DONGYEON S&T, Co. Ltd.
+ * @Author : 공성준
+ * @Create : 2023년 10월 12일
+  -->
+<mapper namespace="mapper.example">
+
+    <select id="selectListExampleDualList" resultType="camelMap" parameterType="hashMap">
+        SELECT
+            1       NUM_LIST
+        FROM
+            DUAL
+        UNION ALL
+        SELECT
+            2       NUM_LIST
+        FROM
+            DUAL
+        UNION ALL
+        SELECT
+            3       NUM_LIST
+        FROM
+            DUAL
+        <if test="param1 != null">
+        UNION ALL
+        SELECT
+            ${param1}
+                    NUM_LIST
+        FROM
+            DUAL
+        </if>
+
+    </select>
+
+</mapper>

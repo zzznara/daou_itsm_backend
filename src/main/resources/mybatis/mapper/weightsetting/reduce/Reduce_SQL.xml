@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- 
+ * 공통코드 관리 iBatis SqlMap으로서 작용한다.
+ * @Company : DONGYEN S&t, Ltd.
+ * @Copyright : Copyright (C) by DONGYEN S&t All rights reserved.
+ * @Author : 류승우
+ * @Create : 2022년 03월 14일
+  -->
+<mapper namespace="weightsetting.reduce">
+
+    <resultMap id="reduceMap" type="egovMap" />
+    <select id="searchReduceList"  parameterType="hashMap" resultMap="reduceMap">
+
+	SELECT REDUCE_CD ,
+	       REDUCE_DESC ,
+	       UNIT_WEIGHT ,
+	       rcd.CUST_CD ,
+		   CASE WHEN rcd.CUST_CD = 'ALL' THEN '전체' ELSE CUST_NM END CUST_NM,      
+	       TO_CHAR(INPT_DT, 'YYYY-MM-DD') INPT_DT, 
+		   INPT_ID, 
+		   INPT_IP, 
+		   UPDT_DT, 
+		   UPDT_ID, 
+		   UPDT_IP,
+		   PROD_CD AS PROD_NM
+	  FROM REDUCE_CD_DETAIL rcd
+	  LEFT JOIN KOSCO.BBAT041 bb41 ON BB41.CUST_CD = RCD.CUST_CD     
+     WHERE REDUCE_CD LIKE '%' || #{reduceCd} || '%'
+       AND NVL(bb41.CUST_NM,'전체') LIKE '%' || #{custNm} || '%'
+     ORDER BY REDUCE_CD, CUST_NM
+    </select>    
+    
+    <insert id="saveReduceList_I">
+	INSERT INTO REDUCE_CD_DETAIL( 
+		 REDUCE_CD,
+		 CUST_CD, 
+		 UNIT_WEIGHT, 
+		 REDUCE_DESC, 
+		 INPT_DT, 
+		 INPT_ID, 
+		 INPT_IP, 
+		 UPDT_DT, 
+		 UPDT_ID, 
+		 UPDT_IP,
+		 PROD_CD
+		 )
+		VALUES(
+		 #{reduceCd} ,
+		 #{custCd} ,
+		 #{unitWeight} ,
+		 #{reduceDesc} ,
+		 SYSDATE,
+		 #{sysUserId} ,
+		 #{sysUserIp} ,
+		 SYSDATE,
+		 #{sysUserId} ,
+		 #{sysUserIp} ,
+		 #{prodNm}
+		 )
+
+    </insert>
+    
+    <update id="saveReduceList_U">
+    UPDATE REDUCE_CD_DETAIL 
+       SET UNIT_WEIGHT = NVL(#{unitWeight}, UNIT_WEIGHT),
+           REDUCE_DESC = NVL(#{reduceDesc}, REDUCE_DESC),
+           UPDT_DT = SYSDATE ,
+           UPDT_ID = #{sysUserId} ,
+           UPDT_IP = #{sysUserIp} ,
+           PROD_CD = #{prodNm}
+     WHERE REDUCE_CD = #{reduceCd} 
+       AND CUST_CD = #{custCd}
+    </update>
+    
+    <delete id="saveReduceList_D">
+    DELETE FROM REDUCE_CD_DETAIL WHERE REDUCE_CD = #{reduceCd}
+    </delete>
+
+</mapper>

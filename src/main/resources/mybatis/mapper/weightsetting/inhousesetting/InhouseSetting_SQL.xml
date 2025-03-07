@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- 
+ * 공통코드 관리 iBatis SqlMap으로서 작용한다.
+ * @Company : DONGYEN S&t, Ltd.
+ * @Copyright : Copyright (C) by DONGYEN S&t All rights reserved.
+ * @Author : 류승우
+ * @Create : 2022년 03월 14일
+  -->
+<mapper namespace="weightsetting.inhousesetting">
+
+    <resultMap id="inhousesettingMap" type="egovMap" />
+    <select id="searchInhouseSettingList"  parameterType="hashMap" resultMap="inhousesettingMap">
+
+	SELECT CAR_NO ,
+	       itc.CUST_CD ,
+	       b041.CUST_NM ,
+	       itc.PROD_CD ,
+	       CAR_WEIGHT ,
+	       TO_CHAR(CAR_WEIGHT_R_DT, 'YYYY-MM-DD') CAR_WEIGHT_R_DT ,
+	       TO_CHAR(itc.INPT_DT, 'YYYY-MM-DD') INPT_DT, 
+	       AA.CODE_NAME AS PROD_NM,
+	       itc.WBRDG_CD ,
+	       itc.WBRDG_CD2 ,
+	       AA.CODE_NAME AS PROD_NM,
+	       WBRDG_CD ,
+	       tcd.CD_NM_KOR WBRDG_NM ,
+	       tcd2.CD_NM_KOR WBRDG2_NM  ,
+	       itc.APP_WEIGH_USE_YN ,
+	       itc.BUCKET_CD ,
+	       (SELECT CD_NM_KOR FROM TB_CD_DETAIL WHERE MAST_CD = 'IN_HOUSE_D_BCKT_W' AND DETL_CD = itc.BUCKET_CD) AS BUCKET_NM
+	  FROM INNER_TRANS_CAR itc 
+	  LEFT JOIN KOSCO.BBAT041 b041 ON itc.CUST_CD = b041.CUST_CD 
+                                  AND USE_YN = 'Y'
+      LEFT JOIN KOSCO.BCOD011 AA ON AA.GUBUN = 'H002'
+                                AND AA.USE_GUBUN = '1'
+                                AND AA.REF_1 = '1'
+                                AND AA.REF_2 = itc.PROD_CD
+	  LEFT JOIN TB_CD_DETAIL tcd  ON itc.WBRDG_CD = tcd.DETL_CD 
+		                         AND tcd.MAST_CD = 'W_PLC_NODE_CD'
+      LEFT JOIN TB_CD_DETAIL tcd2 ON itc.WBRDG_CD2 = tcd2.DETL_CD 
+		                         AND tcd2.MAST_CD = 'W_PLC_NODE_CD'	
+     WHERE CAR_NO LIKE '%' || #{carNo} || '%'
+       <!-- AND NVL(bb41.CUST_NM,' ') LIKE '%' || #{custNm} || '%' -->
+     ORDER BY CAR_NO
+    </select>    
+    
+    <insert id="saveInhouseSettingList_I">
+    INSERT INTO INNER_TRANS_CAR(
+		CAR_NO, 
+		CUST_CD,
+		WBRDG_CD,
+		WBRDG_CD2,
+		INPT_DT, 
+		INPT_ID, 
+		INPT_IP, 
+		UPDT_DT, 
+		UPDT_ID, 
+		UPDT_IP,
+		APP_WEIGH_USE_YN
+		)
+	VALUES(
+		#{carNo}, 
+		#{custCd},
+		#{wbrdgCd},
+		#{wbrdgCd2},
+		SYSDATE , 
+		#{sysUserId}, 
+		#{sysUserIp}, 
+		SYSDATE, 
+		#{sysUserId}, 
+		#{sysUserIp},
+		#{appWeighUseYn}
+		)
+
+
+    </insert>
+    
+    <update id="saveInhouseSettingList_U">
+    UPDATE INNER_TRANS_CAR 
+       SET WBRDG_CD = NVL(#{wbrdgCd}, WBRDG_CD),
+           WBRDG_CD2 = NVL(#{wbrdgCd2}, WBRDG_CD),
+           UPDT_DT = SYSDATE ,
+           UPDT_ID = #{sysUserId} ,
+           UPDT_IP = #{sysUserIp} ,
+           APP_WEIGH_USE_YN = #{appWeighUseYn} 
+     WHERE CAR_NO = #{carNo} 
+       AND CUST_CD = #{custCd}
+    </update>
+    
+    <delete id="saveInhouseSettingList_D">
+    DELETE FROM INNER_TRANS_CAR WHERE CAR_NO = #{carNo} AND CUST_CD = #{custCd}
+    </delete>
+
+</mapper>

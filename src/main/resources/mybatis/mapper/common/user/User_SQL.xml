@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- 
+ * 공통코드 관리 iBatis SqlMap으로서 작용한다.
+ * @Company : DONGYEN S&t, Ltd.
+ * @Copyright : Copyright (C) by DONGYEN S&t All rights reserved.
+ * @Author : 장태준
+ * @Create : 2024년 08월 23일
+  -->
+<mapper namespace="common.user">
+	
+	<resultMap id="userMap" type="egovMap" />	
+	<select id="searchUserList"  parameterType="hashMap" resultMap="userMap">
+
+		SELECT
+			A.SYSTEM_CD,
+			A.USER_ID,
+			A.EMP_NO,
+			A.NM_KOR,
+			A.NM_ENG,
+			A.NM_CHN,
+			A.EMAIL,
+			A.DPT_CD,
+			A.DPT_NM,
+			A.TEL_NO,
+			A.MOBILE_NO,
+			A.RSOF_CD,
+			A.RSOF_NM,
+			A.PLBS_CD,
+			A.PWD,
+			A.PWD_CHNG_DT,
+			A.GENDER,
+			A.ETCO_DT,
+			A.USE_YN,
+			A.INPT_DT,
+			A.INPT_ID,
+			A.INPT_IP,
+			A.UPDT_DT,
+			A.UPDT_ID,
+			A.UPDT_IP
+		FROM TB_USER A
+		WHERE A.USER_ID IS NOT NULL
+			AND A.USER_ID LIKE '%' || #{userId} || '%'
+			AND A.NM_KOR LIKE '%' || #{nmKor} || '%'
+		ORDER BY
+			A.SYSTEM_CD,
+			A.USER_ID,
+			A.NM_KOR,
+			A.DPT_NM	    	
+	</select>	
+	
+		
+	<insert id="insertUser"  parameterType="hashMap">
+		INSERT INTO TB_USER (
+				SYSTEM_CD,
+				USER_ID,
+				EMP_NO, 
+				NM_KOR,
+				NM_ENG,
+				NM_CHN,
+				EMAIL,
+				DPT_CD,
+				DPT_NM,
+				TEL_NO,
+				MOBILE_NO,
+				RSOF_CD,
+				RSOF_NM,
+				PLBS_CD,
+				PWD,
+				PWD_CHNG_DT,
+				GENDER,
+				ETCO_DT,
+				USE_YN,
+				INPT_DT,
+				INPT_ID,
+				INPT_IP,
+				UPDT_DT,
+				UPDT_ID,
+				UPDT_IP
+			)
+			VALUES (
+				#{systemCd},
+				#{userId},
+				#{empNo},
+				#{nmKor},
+				#{nmEng},
+				#{nmChn},
+				#{email},
+				#{dptCd},
+				#{dptNm},
+				#{telNo},
+				#{mobileNo},
+				#{rsofCd},
+				#{rsofNm},
+				#{plbsCd},
+				#{pwd},
+				SYSDATE,
+				#{gender},
+				#{etcoDt},
+				#{useYn},
+				SYSDATE,
+				#{sysUserId},
+				#{sysUserIp},
+				SYSDATE,
+				#{sysUserId},
+				#{sysUserIp}
+			)
+	</insert>		
+	
+	<update id="updateUser"  parameterType="hashMap">
+	     UPDATE TB_USER 
+			SET
+			EMP_NO = NVL(#{empNo}, EMP_NO),
+			NM_KOR = NVL(#{nmKor}, NM_KOR),
+			NM_ENG = NVL(#{nmEng}, NM_ENG),
+			NM_CHN = NVL(#{nmChn}, NM_CHN),
+			EMAIL  = NVL(#{email}, EMAIL),
+			DPT_CD = NVL(#{dptCd}, DPT_CD),
+			DPT_NM = NVL(#{dptNm}, DPT_NM),
+			TEL_NO = NVL(#{telNo}, TEL_NO),
+			MOBILE_NO = NVL(#{mobileNo}, MOBILE_NO),
+			RSOF_CD = NVL(#{rsofCd}, RSOF_CD),
+			RSOF_NM = NVL(#{rsofNm}, RSOF_NM),
+			PLBS_CD = NVL(#{plbsCd}, PLBS_CD),
+			PWD = NVL(#{pwd}, PWD),
+			GENDER = NVL(#{gender}, GENDER),
+			ETCO_DT = NVL(#{etcoDt}, ETCO_DT),
+			USE_YN = NVL(#{useYn}, USE_YN),						
+			UPDT_DT = SYSDATE ,
+			UPDT_ID = #{sysUserId} ,
+			UPDT_IP = #{sysUserIp} 
+		WHERE USER_ID = #{userId}
+	</update>
+	
+	<delete id="deleteUser"  parameterType="hashMap">
+		DELETE FROM TB_USER WHERE USER_ID = #{userId}
+	</delete>
+	
+	<update id="changePwd"  parameterType="hashMap">
+	     UPDATE TB_USER 
+			SET PWD     = #{pwd},
+                UPDT_DT = SYSDATE ,
+                UPDT_ID = #{sysUserId} ,
+                UPDT_IP = #{sysUserIp}
+          WHERE USER_ID = #{userId}
+	</update>
+</mapper>

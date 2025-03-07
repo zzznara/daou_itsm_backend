@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+ * Auth, 모바일 인증 및 로그인 등
+ * @Company : DONGYEON S&T, Co. Ltd.
+ * @Author : 공성준
+ * @Create : 2023년 10월 05일
+  -->
+<mapper namespace="core.security.auth">
+
+	<select id="getUserById" parameterType="hashMap" resultType="kr.co.dysnt.framework.core.security.user.TmsUser">
+      SELECT
+        TU.SYSTEM_CD,
+        TRIM(TU.USER_ID) AS USER_ID,
+        TU.EMP_NO,
+        TU.NM_KOR,
+        TU.NM_CHN,
+        TU.EMAIL,
+        TU.DPT_CD,
+        TU.DPT_NM,
+        TU.TEL_NO,
+        TU.MOBILE_NO,
+        TU.RSOF_CD,
+        TU.RSOF_NM,
+        TU.PLBS_CD,
+        TU.PWD,
+        TU.PWD_CHNG_DT,
+        TU.GENDER,
+        TU.ETCO_DT,
+        TU.USE_YN,
+        TU.NM_ENG,
+
+        -- 사용자가 특정 그룹에 속하는지 확인 (기존 방식으로 복구)
+        (SELECT DECODE(COUNT(*), 0, 'N', 'Y')
+        FROM VUE.TB_GROUP_USER TGU
+        INNER JOIN VUE.TB_GROUP TG ON TGU.GROUP_ID = TG.GROUP_ID
+        WHERE TGU.USER_ID = TU.USER_ID
+          AND TG.GROUP_NM IN ('관리자', '담당자', '일반담당자', '외부업체', '보안담당자', 'RPA', '일반임직원')) AS IS_ADMIN,
+
+        -- 사용자가 속한 그룹명을 리스트로 가져오기
+        (SELECT LISTAGG(TG.GROUP_NM, ', ') WITHIN GROUP (ORDER BY TGU.USER_ID)
+        FROM VUE.TB_GROUP_USER TGU
+        INNER JOIN VUE.TB_GROUP TG ON TGU.GROUP_ID = TG.GROUP_ID
+        WHERE TGU.USER_ID = TU.USER_ID) AS ADMIN_NM,
+
+        '0000' AS LOGIN_RESULT
+
+        FROM VUE.TB_USER TU
+        WHERE TU.USER_ID = #{userId}
+          AND TU.USE_YN = 'Y'
+	</select>
+
+</mapper>

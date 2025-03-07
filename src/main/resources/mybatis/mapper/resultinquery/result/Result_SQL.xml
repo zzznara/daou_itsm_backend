@@ -1,0 +1,535 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- 
+ * 공통코드 관리 iBatis SqlMap으로서 작용한다.
+ * @Company : DONGYEN S&t, Ltd.
+ * @Copyright : Copyright (C) by DONGYEN S&t All rights reserved.
+ * @Author : 류승우
+ * @Create : 2022년 03월 14일
+  -->
+<mapper namespace="resultinquery.result">
+
+    <resultMap id="resultMap" type="egovMap" />
+     <select id="searchResultList"  parameterType="hashMap" resultMap="resultMap">
+     SELECT T.*
+       FROM (
+               SELECT A.SG, A.DT, A.SEQ
+                     ,B.CATEGORY
+                     ,A.CUST_NM
+                     ,CASE WHEN B.CATEGORY IS NOT NULL THEN (SELECT CD_NM_KOR FROM TB_CD_DETAIL WHERE MAST_CD = 'CATEGORY_GBN_CD' AND DETL_CD = B.CATEGORY AND USE_YN = 'Y') 
+                           WHEN (B.CATEGORY IS NULL AND A.PROD_GB = '1') OR (B.CATEGORY IS NULL AND A.PROD_GB = '2') OR (B.CATEGORY IS NULL AND A.PROD_GB = '4') THEN  (SELECT CD_NM_KOR FROM TB_CD_DETAIL WHERE MAST_CD = 'CATEGORY_GBN_CD' AND DETL_CD = A.PROD_GB AND USE_YN = 'Y')
+                           ELSE NULL
+                           END AS CATEGORY_NM
+                     ,A.IO_GB
+                     ,(SELECT CD_NM_KOR FROM TB_CD_DETAIL WHERE MAST_CD = 'BIZ_TYPE' AND DETL_CD = A.IO_GB AND USE_YN = 'Y') AS IO_GB_NM
+                     ,CASE WHEN A.PROD_NM IS NULL AND A.PROD_CD IS NOT NULL THEN ( 
+                                                                                  SELECT CODE_NAME
+                                                                                    FROM KOSCO.BCOD011 AA
+                                                                                   WHERE AA.GUBUN = 'H002'
+                                                                                     AND AA.USE_GUBUN = '1'
+                                                                                     AND AA.REF_1 = '1'
+                                                                                     AND AA.REF_2 = A.PROD_CD1
+                                                                                  )
+                           ELSE A.PROD_NM
+                      END AS PROD_NM
+                     ,CASE WHEN B.CAR_NO IS NULL THEN A.CAR_NO
+                           ELSE B.CAR_NO
+                      END AS CAR_NO
+                     ,CASE WHEN B.DRV_NM IS NULL THEN CASE WHEN F.CAR_CNT > 1 THEN NULL
+                                                           ELSE F.DRV_NM 
+                                                           END
+                           ELSE B.DRV_NM
+                      END AS DRV_NM
+                     ,CASE WHEN B.DRV_TEL IS NULL THEN CASE WHEN F.CAR_CNT > 1 THEN NULL
+                                                            ELSE REGEXP_REPLACE(REPLACE(F.DRV_TEL, '-', ''), '(.{3})(.+)(.{4})', '\1-\2-\3') 
+                                                            END
+                           ELSE REGEXP_REPLACE(REPLACE(B.DRV_TEL, '-', ''), '(.{3})(.+)(.{4})', '\1-\2-\3')
+                      END AS DRV_TEL
+                     ,CASE WHEN A.IO_GB = 1 THEN A.TWGT
+                           ELSE A.EWGT
+                      END IN_WEIGHT
+                     ,CASE WHEN A.IO_GB = 1 THEN A.EWGT
+                           ELSE A.TWGT
+                      END OUT_WEIGHT
+                     ,A.WGT
+                     ,A.MWGT DECREASE_WGT
+                     ,CASE WHEN A.IO_GB = 1 THEN A.TTM
+                           ELSE A.ETM
+                      END IN_TTM
+                     ,TO_CHAR(TO_DATE(A.DT), 'YYYY-MM-DD') IS_DT
+                     ,E.FILE_ID
+                     ,CASE WHEN E.FILE_ID IS NOT NULL AND B.STATUS_CD = '900' THEN 'Y'
+                           ELSE ''
+                       END AS FILE_YN
+                     ,E.INFO_CD
+                     ,B.SG  AS SG011
+                     ,B.DT  AS DT011
+                     ,B.SEQ AS SEQ011
+                 FROM KOSCO.BWAT010 A
+            LEFT JOIN WSSDBO.BWAT011 B
+                   ON A.SG  = B.REF_SG
+                  AND A.DT  = B.REF_DT
+                  AND A.SEQ = B.REF_SEQ 
+            LEFT JOIN (
+                       SELECT FILE_ID 
+                             ,INFO_CD 
+                             ,SG
+                             ,DT
+                             ,SEQ
+                             ,ROW_NUMBER() OVER (PARTITION BY SG, DT, SEQ ORDER BY INPT_DT) AS RANK
+                         FROM WSS_REL_TR_ORD_INFO_FILE
+                      ) E
+                    ON B.SG = E.SG
+                   AND B.DT = E.DT
+                   AND B.SEQ = E.SEQ
+                   AND E.RANK = 1
+            LEFT JOIN (
+                     SELECT AA.CAR_FULL_NO,
+                            MIN(AA.DRV_NM) AS DRV_NM,
+                            MIN(AA.DRV_TEL) AS DRV_TEL,
+                            COUNT(AA.CAR_FULL_NO) AS CAR_CNT
+                       FROM STL1B2B.E_CAR AA
+                  LEFT JOIN KOSCO.BBAT041 BB
+                         ON AA.CUST_CD = BB.CUST_CD
+                      WHERE AA.USE_YN = 'Y'
+                      GROUP BY AA.CAR_FULL_NO
+                      ) F
+                    ON A.CAR_NO = F.CAR_FULL_NO
+             WHERE A.SG = '4'
+               AND (B.ADD_CD IS NULL OR B.ADD_CD = '')
+                <if test='category != null and category !=""'>
+                    <choose>
+                        <when test='category == "1" or category == "2" or category == "4"'>
+                        AND (A.PROD_GB = #{category} OR B.CATEGORY = #{category})
+                        </when>
+                        <otherwise>
+                        AND B.CATEGORY = #{category}
+                        </otherwise>
+                    </choose>
+              </if>            
+                <if test='carNo != null and carNo !=""'>
+               AND REPLACE(A.CAR_NO, ' ', '') LIKE '%' || #{carNo} || '%'
+              </if>
+              <if test='startDt != null and startDt !="" and endDt != null and endDt !=""'>
+               AND A.DT BETWEEN REPLACE(#{startDt}, '-', '') AND REPLACE(#{endDt}, '-', '')
+              </if>
+              <if test='custCd != null and custCd !=""'>
+               AND ((B.CATEGORY = 2 AND A.CUST_NM = #{custNm}) OR (B.CATEGORY <![CDATA[<>]]> 2 AND A.CAR_CD = #{custCd}))
+              </if> 
+                <if test='prodNm != null and prodNm !=""'>
+               AND A.PROD_NM = #{prodNm}
+              </if> 
+          
+             UNION ALL
+          
+          
+             SELECT A1.SG, A1.DT, A1.SEQ
+                   ,LISTAGG(A1.CATEGORY, ',') WITHIN GROUP (ORDER BY A1.CATEGORY) AS CATEGORY
+                   ,A1.CUST_NM
+                   ,LISTAGG((SELECT CD_NM_KOR FROM TB_CD_DETAIL WHERE MAST_CD = 'CATEGORY_GBN_CD' AND DETL_CD = A1.CATEGORY AND USE_YN = 'Y'), ', ') WITHIN GROUP (ORDER BY A1.CATEGORY) AS CATEGORY_NM
+                   ,A1.IO_GB
+                   ,A1.IO_GB_NM
+                   ,A1.PROD_NM
+                   ,A1.CAR_NO
+                   ,CASE WHEN MAX(A1.DRV_NM) IS NULL THEN CASE WHEN COUNT(F.CAR_FULL_NO) > 1 THEN NULL
+                                                         ELSE MAX(F.DRV_NM)
+                                                         END
+                         ELSE MAX(A1.DRV_NM)
+                    END AS DRV_NM
+                   ,CASE WHEN MAX(A1.DRV_TEL) IS NULL THEN CASE WHEN COUNT(F.CAR_FULL_NO) > 1 THEN NULL
+                                                          ELSE REGEXP_REPLACE(REPLACE(MAX(F.DRV_TEL), '-', ''), '(.{3})(.+)(.{4})', '\1-\2-\3') 
+                                                          END
+                         ELSE REGEXP_REPLACE(REPLACE(MAX(A1.DRV_TEL), '-', ''), '(.{3})(.+)(.{4})', '\1-\2-\3')
+                    END AS DRV_TEL
+                   ,A1.IN_WEIGHT
+                   ,A1.OUT_WEIGHT
+                   ,A1.WGT
+                   ,A1.DECREASE_WGT
+                   ,A1.IN_TTM
+                   ,A1.DT
+                   ,MAX(E.FILE_ID) AS FILE_ID
+                   ,CASE WHEN MAX(E.FILE_ID) IS NOT NULL AND MIN(A1.STATUS_CD) = '900' THEN 'Y'
+                         ELSE ''
+                     END AS FILE_YN
+                   ,MAX(E.INFO_CD) AS INFO_CD
+                   ,MAX(A1.SG011)  AS SG011
+                   ,MAX(A1.DT011)  AS DT011
+                   ,MAX(A1.SEQ011) AS SEQ011
+               FROM (
+                           SELECT A.SG, A.DT, A.SEQ
+                                 ,B.CATEGORY
+                                 ,A.CUST_NM
+                                 ,A.IO_GB
+                                 ,(SELECT CD_NM_KOR FROM TB_CD_DETAIL WHERE MAST_CD = 'BIZ_TYPE' AND DETL_CD = A.IO_GB AND USE_YN = 'Y') AS IO_GB_NM
+                                 ,CASE WHEN A.PROD_NM IS NULL AND A.PROD_CD IS NOT NULL THEN ( 
+                                                                                              SELECT CODE_NAME
+                                                                                                FROM KOSCO.BCOD011 AA
+                                                                                               WHERE AA.GUBUN = 'H002'
+                                                                                                 AND AA.USE_GUBUN = '1'
+                                                                                                 AND AA.REF_1 = '1'
+                                                                                                 AND AA.REF_2 = A.PROD_CD1
+                                                                                              )
+                                       ELSE A.PROD_NM
+                                  END AS PROD_NM
+                                 ,A.CAR_NO
+                                 ,B.DRV_NM
+                                 ,B.DRV_TEL
+                                 ,CASE WHEN A.IO_GB = 1 THEN A.TWGT
+                                       ELSE A.EWGT
+                                  END IN_WEIGHT
+                                 ,CASE WHEN A.IO_GB = 1 THEN A.EWGT
+                                       ELSE A.TWGT
+                                  END OUT_WEIGHT
+                                 ,A.WGT
+                                 ,A.MWGT DECREASE_WGT
+                                 ,CASE WHEN A.IO_GB = 1 THEN A.TTM
+                                       ELSE A.ETM
+                                  END IN_TTM
+                                 ,TO_CHAR(A.IS_DT, 'YYYY-MM-DD') IS_DT
+                                 ,B.SG  AS SG011
+                                 ,B.DT  AS DT011
+                                 ,B.SEQ AS SEQ011
+                                 ,B.STATUS_CD
+                             FROM KOSCO.BWAT010 A
+                        LEFT JOIN WSSDBO.BWAT011 B
+                               ON A.SG  = B.REF_SG
+                              AND A.DT  = B.REF_DT
+                              AND A.SEQ = B.REF_SEQ 
+                         WHERE A.SG = '4'
+                           AND B.ADD_CD IS NOT NULL
+                            <if test='category != null and category !=""'>
+                            <choose>
+                               <when test='category == "1" or category == "2" or category == "4"'>
+                               AND (A.PROD_GB = #{category} OR B.CATEGORY = #{category})
+                               </when>
+                               <otherwise>
+                               AND B.CATEGORY = #{category}
+                               </otherwise>
+                           </choose>
+                           </if>            
+                           <if test='carNo != null and carNo !=""'>
+                            AND REPLACE(A.CAR_NO, ' ', '') LIKE '%' || #{carNo} || '%'
+                           </if>
+                           <if test='startDt != null and startDt !="" and endDt != null and endDt !=""'>
+                            AND A.DT BETWEEN REPLACE(#{startDt}, '-', '') AND REPLACE(#{endDt}, '-', '')
+                           </if>
+                           <if test='custCd != null and custCd !=""'>
+                            AND ((B.CATEGORY = 2 AND A.CUST_NM = #{custNm}) OR (B.CATEGORY <![CDATA[<>]]> 2 AND A.CAR_CD = #{custCd}))
+                           </if> 
+                             <if test='prodNm != null and prodNm !=""'>
+                            AND A.PROD_NM = #{prodNm}
+                           </if> 
+                    ) A1
+            LEFT JOIN (
+                       SELECT FILE_ID 
+                             ,INFO_CD 
+                             ,SG
+                             ,DT
+                             ,SEQ
+                             ,ROW_NUMBER() OVER (PARTITION BY SG, DT, SEQ ORDER BY INPT_DT) AS RANK
+                         FROM WSS_REL_TR_ORD_INFO_FILE
+                      ) E
+                    ON A1.SG = E.SG
+                   AND A1.DT = E.DT
+                   AND A1.SEQ = E.SEQ
+                   AND E.RANK = 1
+            LEFT JOIN (
+                     SELECT AA.CAR_FULL_NO,
+                            MIN(AA.DRV_NM) AS DRV_NM,
+                            MIN(AA.DRV_TEL) AS DRV_TEL,
+                            COUNT(AA.CAR_FULL_NO) AS CAR_CNT
+                       FROM STL1B2B.E_CAR AA
+                  LEFT JOIN KOSCO.BBAT041 BB
+                         ON AA.CUST_CD = BB.CUST_CD
+                      WHERE AA.USE_YN = 'Y'
+                      GROUP BY AA.CAR_FULL_NO
+                      ) F
+                    ON A1.CAR_NO = F.CAR_FULL_NO
+            GROUP BY A1.SG, A1.DT, A1.SEQ
+                                 ,A1.CUST_NM
+                                 ,A1.IO_GB
+                                 ,A1.IO_GB_NM
+                                 ,A1.PROD_NM
+                                 ,A1.CAR_NO
+                                 ,A1.IN_WEIGHT
+                                 ,A1.OUT_WEIGHT
+                                 ,A1.WGT
+                                 ,A1.DECREASE_WGT
+                                 ,A1.IN_TTM
+                                 ,A1.IS_DT
+           ) T
+    ORDER BY T.SG ASC, T.DT ASC, T.SEQ ASC
+     </select>
+<!--
+    <select id="searchResultList"  parameterType="hashMap" resultMap="resultMap">
+    SELECT
+        AB.*
+        FROM
+        (
+            SELECT
+                  AAA.*
+                , BB.CD_NM_KOR CATEGORY_NM
+                , CC.CODE_NAME CAR_TYPE_NM
+                , DD.VENDOR_NM
+                , BB1.CD_NM_KOR IO_GB_NM
+            FROM (
+                SELECT
+                      A.SG
+                    , SUBSTR(A.DT, 0, 4) || '-' || SUBSTR(A.DT, 5, 2) || '-' || SUBSTR(A.DT, 7, 2) AS DT
+                    , A.SEQ
+                    , A.SG || A.DT || LPAD(TO_CHAR(A.SEQ), 4, '0')
+                                        ASSIGN_KEY
+                    , A.CATEGORY
+                    , A.IO_GB
+                    , A.TURN
+                    , A.CAR_NO
+                    , A.CUST_CD
+                    , A.CUST_NM
+                    , A.DRV_NM
+                      , REGEXP_REPLACE(REPLACE(A.DRV_TEL, '-', ''), '(.{3})(.+)(.{4})', '\1-\2-\3') AS DRV_TEL
+                    , CASE WHEN A.PROD_NM IS NULL AND A.PROD_CD IS NOT NULL THEN ( 
+                                                                          SELECT CODE_NAME
+                                                                          FROM KOSCO.BCOD011 AA
+                                                                         WHERE AA.GUBUN = 'H002'
+                                                                           AND AA.USE_GUBUN = '1'
+                                                                           AND AA.REF_1 = '1'
+                                                                           AND AA.REF_2 = A.PROD_CD1
+                                                                      )
+                             ELSE A.PROD_NM
+                                END AS PROD_NM
+                    , A.PROD_GB
+                    , A.PROD_CD
+                    , A.PROD_CD1
+                    , A.VENDOR_CD
+                    , A.GRADE
+                    , A.GRADE_NM
+                    , A.DECREASE_CODE
+                    , B.MWGT DECREASE_WGT
+                    , A.CAR_TYPE
+                    , A.ADD_CD
+                    , A.MIX_CD
+                    , A.BANPUM_YN
+                    , A.COT_NUM
+                    , A.REF_SG
+                    , A.REF_DT
+                    , A.REF_SEQ
+                    , A.STATUS_CD
+                    , B.TWGT
+                    , B.EWGT
+                    , B.WGT
+                    , B.MWGT
+                    , B.TTM
+                    , B.ETM
+                    , B.RETURN          RETURN_YN
+                    , CASE
+                        WHEN A.IO_GB = 1 THEN
+                            B.TWGT
+                        ELSE
+                            B.EWGT
+                    END IN_WEIGHT
+                    , CASE
+                        WHEN A.IO_GB = 1 THEN
+                            B.EWGT
+                        ELSE
+                            B.TWGT
+                    END OUT_WEIGHT
+                    , CASE
+                        WHEN A.IO_GB = 1 THEN
+                            B.TTM
+                        ELSE
+                            B.ETM
+                    END IN_TTM
+                    ,TO_CHAR(B.IS_DT, 'YYYY-MM-DD') IS_DT
+                    , E.FILE_ID
+                    , CASE WHEN E.FILE_ID IS NOT NULL AND A.STATUS_CD = '900' THEN 'Y'
+                           ELSE ''
+                      END AS FILE_YN
+                    , E.INFO_CD
+                FROM
+                    WSSDBO.BWAT011                              A
+                        LEFT OUTER JOIN KOSCO.BWAT010           B
+                                     ON A.REF_SG                    = B.SG
+                                    AND A.REF_DT                    = B.DT
+                                    AND A.REF_SEQ                   = B.SEQ
+                        LEFT OUTER JOIN WSSDBO.REDUCE_CD_DETAIL C
+                                     ON A.DECREASE_CODE             = C.REDUCE_CD
+                                    AND A.CUST_CD                   = C.CUST_CD
+                        LEFT OUTER JOIN WSSDBO.REDUCE_CD_DETAIL D
+                                     ON A.DECREASE_CODE             = D.REDUCE_CD
+                                    AND D.CUST_CD                   = 'ALL'            
+                        LEFT OUTER JOIN (SELECT E.FILE_ID 
+                                               ,E.INFO_CD 
+                                               ,E.SG, E.DT, E.SEQ
+                                               ,ROW_NUMBER() OVER (PARTITION BY SG, DT, SEQ ORDER BY INPT_DT) AS RANK
+                                             FROM WSS_REL_TR_ORD_INFO_FILE E ) E
+                                     ON A.SG = E.SG
+                                    AND A.DT = E.DT
+                                    AND A.SEQ = E.SEQ
+                                    AND E.RANK = 1
+                  WHERE   1 = 1
+                     <if test='category != null and category !=""'>
+                    AND A.CATEGORY LIKE '%' || #{category} || '%'
+                    </if>            
+                     <if test='carNo != null and carNo !=""'>
+                    AND REPLACE(A.CAR_NO, ' ', '') LIKE '%' || #{carNo} || '%'
+                    </if>                    
+                    <if test='startDt != null and startDt !="" and endDt != null and endDt !=""'>
+                    AND TO_CHAR(B.IS_DT, 'YYYY-MM-DD') BETWEEN #{startDt} AND #{endDt}
+                    </if> 
+                     
+                    <if test='custCd != null and custCd !=""'>
+                    AND ((A.CATEGORY = 2 AND A.CUST_NM = #{custNm}) OR (A.CATEGORY <![CDATA[<>]]> 2 AND A.CAR_CD = #{custCd}))
+                    </if>
+                     <if test='prodCd1 != null and prodCd1 !=""'>
+                    AND A.PROD_CD1 =#{prodCd1}
+                    </if>                    
+                    
+                    <![CDATA[ 
+                    AND (A.STATUS_CD <> 100)
+                    ]]>
+                    
+                    AND (A.ADD_CD IS NULL OR A.ADD_CD = '') 
+                    AND A.REF_SEQ IS NOT NULL
+                
+                UNION ALL
+                
+                SELECT
+                      A.SG
+                    , SUBSTR(A.DT, 0, 4) || '-' || SUBSTR(A.DT, 5, 2) || '-' || SUBSTR(A.DT, 7, 2) AS DT
+                    , MIN(A.SEQ)        SEQ
+                    , A.SG || A.DT || LPAD(TO_CHAR(MIN(A.SEQ)), 4, '0')
+                                        ASSIGN_KEY
+                    , MIN(A.CATEGORY)
+                    , A.IO_GB
+                    , MIN(A.TURN)       TURN
+                    , A.CAR_NO
+                    , MIN(A.CUST_CD)    CUST_CD
+                    , MIN(A.CUST_NM)    CUST_NM                    
+                    , ''                DRV_NM
+                      , REGEXP_REPLACE(REPLACE(A.DRV_TEL, '-', ''), '(.{3})(.+)(.{4})', '\1-\2-\3') AS DRV_TEL
+                    , MIN(A.PROD_NM)
+                    , ''                PROD_GB
+                    , ''                PROD_CD
+                    , ''                PROD_CD1
+                    , MIN(A.VENDOR_CD)  VENDOR_CD
+                    , ''                GRADE
+                    , ''                GRADE_NM
+                    , ''                DECREASE_CODE
+                    , 0                 DECREASE_WGT
+                    , A.CAR_TYPE
+                    , A.ADD_CD
+                    , ''                MIX_CD
+                    , MAX(A.BANPUM_YN)  BANPUM_YN
+                    , ''                COT_NUM
+                    , A.REF_SG          REF_SG
+                    , A.REF_DT          REF_DT
+                    , A.REF_SEQ         REF_SEQ
+                    , A.STATUS_CD
+                    , B.TWGT
+                    , B.EWGT
+                    , B.WGT
+                    , B.MWGT
+                    , B.TTM
+                    , B.ETM
+                    , MAX(B.RETURN)     RETURN_YN
+                    , CASE
+                        WHEN A.IO_GB = 1 THEN
+                            B.TWGT
+                        ELSE
+                            B.EWGT
+                    END IN_WEIGHT
+                    , CASE
+                        WHEN A.IO_GB = 1 THEN
+                            B.EWGT
+                        ELSE
+                            B.TWGT
+                    END OUT_WEIGHT
+                    , CASE
+                        WHEN A.IO_GB = 1 THEN
+                            B.TTM
+                        ELSE
+                            B.ETM
+                    END IN_TTM
+                    , TO_CHAR(B.IS_DT, 'YYYY-MM-DD') IS_DT
+                    , '' FILE_ID
+                    , '' FILE_YN
+                    , '' INFO_CD
+                
+                FROM
+                    WSSDBO.BWAT011                      A
+                        LEFT OUTER JOIN KOSCO.BWAT010   B
+                                     ON A.REF_SG                    = B.SG
+                                    AND A.REF_DT                    = B.DT
+                                    AND TO_NUMBER(A.REF_SEQ)        = B.SEQ
+                  WHERE 1 = 1
+                     <if test='category != null and category !=""'>
+                    AND A.CATEGORY LIKE '%' || #{category} || '%'
+                    </if>            
+                     <if test='carNo != null and carNo !=""'>
+                    AND REPLACE(A.CAR_NO, ' ', '') LIKE '%' || #{carNo} || '%'
+                    </if>
+                    <if test='startDt != null and startDt !="" and endDt != null and endDt !=""'>
+                    AND TO_CHAR(B.IS_DT, 'YYYY-MM-DD') BETWEEN #{startDt} AND #{endDt}
+                    </if>
+                    <if test='custCd != null and custCd !=""'>
+                    AND ((A.CATEGORY = 2 AND A.CUST_NM = #{custNm}) OR (A.CATEGORY <![CDATA[<>]]> 2 AND A.CAR_CD = #{custCd}))
+                    </if> 
+                     <if test='prodCd1 != null and prodCd1 !=""'>
+                    AND A.PROD_CD1 = #{prodCd1}
+                    </if> 
+                    
+                    <![CDATA[ 
+                    AND (A.STATUS_CD <> 100)
+                    ]]>
+                    
+                    AND A.ADD_CD IS NOT NULL 
+                    AND A.REF_SEQ IS NOT NULL
+                GROUP BY
+                      A.SG
+                    , A.DT
+                    , A.IO_GB
+                    , A.CAR_NO
+                    , A.DRV_TEL
+                    , A.STATUS_CD
+                    , A.CAR_TYPE
+                    , A.ADD_CD
+                    , A.BANPUM_YN
+                    , A.REF_SG
+                    , A.REF_DT
+                    , A.REF_SEQ
+                    , B.TWGT
+                    , B.EWGT
+                    , B.WGT
+                    , B.MWGT
+                    , B.TTM
+                    , B.ETM
+                    , B.IS_DT
+            ) AAA
+            LEFT OUTER JOIN
+                TB_CD_DETAIL BB
+                         ON
+                            BB.DETL_CD = AAA.CATEGORY
+                        AND BB.MAST_CD = 'CATEGORY_GBN_CD'
+            LEFT OUTER JOIN
+                KOSCO.BCOD011 CC
+                         ON
+                            CC.CODE = AAA.CAR_TYPE
+                        AND CC.GUBUN = 'H003'
+            LEFT OUTER JOIN
+                KOSCO.BBAT051 DD
+                         ON
+                            DD.VENDOR_CD = AAA.VENDOR_CD
+            
+            LEFT OUTER JOIN 
+                TB_CD_DETAIL BB1 
+                         ON
+                            BB1.DETL_CD = AAA.IO_GB
+                        AND BB1.MAST_CD = 'BIZ_TYPE'
+        ) AB
+                    
+        ORDER BY
+            TO_NUMBER(AB.REF_SEQ) ASC, AB.SEQ ASC
+    </select>    
+ -->
+</mapper>
