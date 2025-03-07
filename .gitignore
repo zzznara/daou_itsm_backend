@@ -4,3 +4,4 @@
 /target/
 /_log_dir/
 /.vscode/
+src/main/resources/firebase/*.json
