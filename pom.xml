@@ -255,6 +255,11 @@
             <artifactId>oraclepki</artifactId>
             <version>21.5.0.0</version>
         </dependency>
+		<dependency>
+		    <groupId>mysql</groupId>
+		    <artifactId>mysql-connector-java</artifactId>
+		    <version>8.0.29</version> <!-- 최신 버전은 공식 사이트나 Maven Repository에서 확인 -->
+		</dependency>
 
         <dependency>
             <groupId>p6spy</groupId>
