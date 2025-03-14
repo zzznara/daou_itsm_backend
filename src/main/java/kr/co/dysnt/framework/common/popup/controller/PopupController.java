@@ -1,85 +1,74 @@
 package kr.co.dysnt.framework.common.popup.controller;
 
-import kr.co.dysnt.framework.common.popup.domain.Popup;
 import kr.co.dysnt.framework.common.popup.service.PopupService;
-import kr.co.dysnt.framework.common.util.api.response.ApiResponse;
+import kr.co.dysnt.framework.core.util.IUtility;
+import kr.co.dysnt.framework.core.util.controller.CommonController;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
+import org.json.simple.JSONObject;
+import org.egovframe.rte.psl.dataaccess.util.EgovMap;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletRequest;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 @RestController
 @RequestMapping("/common/popup")
 @RequiredArgsConstructor
-public class PopupController {
-
+public class PopupController extends CommonController {
     private final PopupService popupService;
 
-    @GetMapping("/list")
-    public ResponseEntity<ApiResponse<?>> getPopupList(@RequestParam Map<String, Object> params) {
-        try {
-            List<Popup> popupList = popupService.getPopupList(params);
-            return ResponseEntity.ok(ApiResponse.successResponse(popupList));
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError()
-                .body(ApiResponse.errorResponse("팝업 목록 조회 중 오류가 발생했습니다."));
-        }
+    @RequestMapping(value = "/list")
+    public @ResponseBody JSONObject getPopupList(HttpServletRequest request,
+            @RequestParam Map<String, String> reqParam) throws Exception {
+        JSONObject result = new JSONObject();
+        System.out.println("popupId ==" + (String) reqParam.get("popupId"));
+        System.out.println("popupNm ==" + (String) reqParam.get("popupNm"));
+
+        HashMap<String, Object> param = new HashMap<String, Object>();
+        param.put("popupId", IUtility.parseNull(reqParam.get("popupId")));
+        param.put("popupNm", IUtility.parseNull(reqParam.get("popupNm")));
+
+        List<EgovMap> resultList = popupService.getPopupList(param);
+        setSuccess(result, resultList);
+        return result;
     }
 
-    @GetMapping("/generateId")
-    public ResponseEntity<ApiResponse<?>> generatePopupId() {
+    @RequestMapping(value = "/save")
+    public @ResponseBody JSONObject save(HttpServletRequest request,
+            @RequestBody Map<String, Object> reqParam) throws Exception {
+        JSONObject result = new JSONObject();
+        
         try {
-            String popupId = popupService.generatePopupId();
-            return ResponseEntity.ok(ApiResponse.successResponse(popupId));
+            if (reqParam.get("popupId") == null || reqParam.get("popupId").toString().isEmpty()) {
+                String popupId = popupService.generatePopupId();
+                reqParam.put("popupId", popupId);
+            }
+
+            popupService.save(reqParam);
+            setSuccess(result, "저장되었습니다.");
         } catch (Exception e) {
-            return ResponseEntity.internalServerError()
-                .body(ApiResponse.errorResponse("팝업 ID 생성 중 오류가 발생했습니다."));
+            e.printStackTrace();
+            setFailed(result, "저장 중 오류가 발생했습니다.\n"+ e.getMessage());
         }
+        
+        return result;
     }
 
-    @GetMapping("/{popupId}")
-    public ResponseEntity<ApiResponse<?>> getPopup(@PathVariable String popupId) {
-        try {
-            Popup popup = popupService.getPopup(popupId);
-            return ResponseEntity.ok(ApiResponse.successResponse(popup));
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError()
-                .body(ApiResponse.errorResponse("팝업 조회 중 오류가 발생했습니다."));
-        }
-    }
-
-    @PostMapping
-    public ResponseEntity<ApiResponse<?>> createPopup(@RequestBody Popup popup) {
-        try {
-            popupService.createPopup(popup);
-            return ResponseEntity.ok(ApiResponse.successWithNoContent());
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError()
-                .body(ApiResponse.errorResponse("팝업 등록 중 오류가 발생했습니다."));
-        }
-    }
-
-    @PutMapping
-    public ResponseEntity<ApiResponse<?>> updatePopup(@RequestBody Popup popup) {
-        try {
-            popupService.updatePopup(popup);
-            return ResponseEntity.ok(ApiResponse.successWithNoContent());
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError()
-                .body(ApiResponse.errorResponse("팝업 수정 중 오류가 발생했습니다."));
-        }
-    }
-
-    @DeleteMapping("/{popupId}")
-    public ResponseEntity<ApiResponse<?>> deletePopup(@PathVariable String popupId) {
+    @RequestMapping(value = "/delete/{popupId}")
+    public @ResponseBody JSONObject delete(HttpServletRequest request,
+            @PathVariable String popupId) throws Exception {
+        JSONObject result = new JSONObject();
+        
         try {
             popupService.deletePopup(popupId);
-            return ResponseEntity.ok(ApiResponse.successWithNoContent());
+            setSuccess(result, "삭제되었습니다.");
         } catch (Exception e) {
-            return ResponseEntity.internalServerError()
-                .body(ApiResponse.errorResponse("팝업 삭제 중 오류가 발생했습니다."));
+            e.printStackTrace();
+            setFailed(result, "삭제 중 오류가 발생했습니다.\n"+ e.getMessage());
         }
+        
+        return result;
     }
 }

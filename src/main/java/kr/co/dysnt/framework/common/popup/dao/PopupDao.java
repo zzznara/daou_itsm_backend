@@ -1,17 +1,15 @@
 package kr.co.dysnt.framework.common.popup.dao;
 
-import kr.co.dysnt.framework.common.popup.domain.Popup;
 import org.apache.ibatis.annotations.Mapper;
+import org.egovframe.rte.psl.dataaccess.util.EgovMap;
 
 import java.util.List;
 import java.util.Map;
 
 @Mapper
 public interface PopupDao {
-    List<Popup> selectPopupList(Map<String, Object> params);
-    Popup selectPopup(String popupId);
-    int insertPopup(Popup popup);
-    int updatePopup(Popup popup);
-    int deletePopup(String popupId);
-    String selectLastPopupId(String datePrefix);
+    List<EgovMap> selectPopupList(Map<String, Object> params);
+    void insertPopup(Map<String, Object> params);
+    void updatePopup(Map<String, Object> params);
+    void deletePopup(String popupId);
 }

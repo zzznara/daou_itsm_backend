@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.co.dysnt.framework.common.popup.dao.PopupDao">
+    <select id="selectPopupList" parameterType="map" resultType="egovMap">
+        SELECT popup_id as popupId,
+               popup_nm as popupNm,
+               popup_ty as popupTy,
+               CASE popup_ty
+                   WHEN 'layer' THEN '레이어'
+                   WHEN 'window' THEN '윈도우'
+                   ELSE ''
+               END as popupTyNm,
+               popup_url as popupUrl,
+               width,
+               height,
+               position_x as positionX,
+               position_y as positionY,
+               use_yn as useYn,
+               CASE use_yn
+                   WHEN 'Y' THEN '사용'
+                   WHEN 'N' THEN '미사용'
+                   ELSE ''
+               END as useYnNm,
+               popup_cn as popupCn
+        FROM tb_popup
+        WHERE 1=1
+        <if test="popupNm != null and popupNm != ''">
+            AND popup_nm LIKE CONCAT('%', #{popupNm}, '%')
+        </if>
+        <if test="useYn != null and useYn != ''">
+            AND use_yn = #{useYn}
+        </if>
+        ORDER BY popup_id ASC
+    </select>
+
+    <insert id="insertPopup" parameterType="map">
+        INSERT INTO tb_popup (
+            popup_id,
+            popup_nm,
+            popup_ty,
+            popup_url,
+            width,
+            height,
+            position_x,
+            position_y,
+            use_yn,
+            popup_cn
+        ) VALUES (
+            #{popupId},
+            #{popupNm},
+            #{popupTy},
+            #{popupUrl},
+            #{width},
+            #{height},
+            #{positionX},
+            #{positionY},
+            #{useYn},
+            #{popupCn}
+        )
+    </insert>
+
+    <update id="updatePopup" parameterType="map">
+        UPDATE tb_popup
+        SET popup_nm = #{popupNm},
+            popup_ty = #{popupTy},
+            popup_url = #{popupUrl},
+            width = #{width},
+            height = #{height},
+            position_x = #{positionX},
+            position_y = #{positionY},
+            use_yn = #{useYn},
+            popup_cn = #{popupCn}
+        WHERE popup_id = #{popupId}
+    </update>
+
+    <delete id="deletePopup" parameterType="string">
+        DELETE FROM tb_popup
+        WHERE popup_id = #{popupId}
+    </delete>
+</mapper>
