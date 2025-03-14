@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.co.dysnt.framework.common.popup.dao.PopupDao">
+
+    <select id="selectPopupList" parameterType="map" resultType="kr.co.dysnt.framework.common.popup.domain.Popup">
+        SELECT
+            POPUP_ID as popupId,
+            POPUP_NM as popupNm,
+            POPUP_TY as popupTy,
+            POPUP_CN as popupCn,
+            POPUP_URL as popupUrl,
+            WIDTH as width,
+            HEIGHT as height,
+            POSITION_X as positionX,
+            POSITION_Y as positionY,
+            USE_YN as useYn,
+            INPT_DT as inptDt,
+            INPT_ID as inptId,
+            INPT_IP as inptIp,
+            UPDT_DT as updtDt,
+            UPDT_ID as updtId,
+            UPDT_IP as updtIp
+        FROM
+            tb_popup
+        <where>
+            <if test="popupId != null and popupId != ''">
+                AND POPUP_ID LIKE CONCAT('%', #{popupId}, '%')
+            </if>
+            <if test="popupNm != null and popupNm != ''">
+                AND POPUP_NM LIKE CONCAT('%', #{popupNm}, '%')
+            </if>
+            <if test="popupTy != null and popupTy != ''">
+                AND POPUP_TY = #{popupTy}
+            </if>
+            <if test="useYn != null and useYn != ''">
+                AND USE_YN = #{useYn}
+            </if>
+        </where>
+        ORDER BY INPT_DT DESC
+    </select>
+
+    <select id="selectPopup" parameterType="string" resultType="kr.co.dysnt.framework.common.popup.domain.Popup">
+        SELECT
+            POPUP_ID as popupId,
+            POPUP_NM as popupNm,
+            POPUP_TY as popupTy,
+            POPUP_CN as popupCn,
+            POPUP_URL as popupUrl,
+            WIDTH as width,
+            HEIGHT as height,
+            POSITION_X as positionX,
+            POSITION_Y as positionY,
+            USE_YN as useYn,
+            INPT_DT as inptDt,
+            INPT_ID as inptId,
+            INPT_IP as inptIp,
+            UPDT_DT as updtDt,
+            UPDT_ID as updtId,
+            UPDT_IP as updtIp
+        FROM
+            tb_popup
+        WHERE
+            POPUP_ID = #{popupId}
+    </select>
+
+    <select id="selectLastPopupId" parameterType="string" resultType="string">
+        SELECT
+            POPUP_ID
+        FROM
+            tb_popup
+        WHERE
+            POPUP_ID LIKE CONCAT(#{datePrefix}, '%')
+        ORDER BY
+            POPUP_ID DESC
+        LIMIT 1
+    </select>
+
+    <insert id="insertPopup" parameterType="kr.co.dysnt.framework.common.popup.domain.Popup">
+        INSERT INTO tb_popup (
+            POPUP_ID,
+            POPUP_NM,
+            POPUP_TY,
+            POPUP_CN,
+            POPUP_URL,
+            WIDTH,
+            HEIGHT,
+            POSITION_X,
+            POSITION_Y,
+            USE_YN,
+            INPT_DT,
+            INPT_ID,
+            INPT_IP
+        ) VALUES (
+            #{popupId},
+            #{popupNm},
+            #{popupTy},
+            #{popupCn},
+            #{popupUrl},
+            #{width},
+            #{height},
+            #{positionX},
+            #{positionY},
+            #{useYn},
+            #{inptDt},
+            #{inptId},
+            #{inptIp}
+        )
+    </insert>
+
+    <update id="updatePopup" parameterType="kr.co.dysnt.framework.common.popup.domain.Popup">
+        UPDATE tb_popup
+        SET
+            POPUP_NM = #{popupNm},
+            POPUP_TY = #{popupTy},
+            POPUP_CN = #{popupCn},
+            POPUP_URL = #{popupUrl},
+            WIDTH = #{width},
+            HEIGHT = #{height},
+            POSITION_X = #{positionX},
+            POSITION_Y = #{positionY},
+            USE_YN = #{useYn},
+            UPDT_DT = #{updtDt},
+            UPDT_ID = #{updtId},
+            UPDT_IP = #{updtIp}
+        WHERE
+            POPUP_ID = #{popupId}
+    </update>
+
+    <delete id="deletePopup" parameterType="string">
+        DELETE FROM tb_popup
+        WHERE POPUP_ID = #{popupId}
+    </delete>
+
+</mapper>
